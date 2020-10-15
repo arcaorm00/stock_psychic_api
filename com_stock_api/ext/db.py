@@ -3,7 +3,7 @@ Base = declarative_base()
 
 config = {
     'user': 'root',
-    'password': 'munnin00',
+    'password': 'root',
     'host': 'localhost',
     'port': '3306',
     'database': 'stockdb'

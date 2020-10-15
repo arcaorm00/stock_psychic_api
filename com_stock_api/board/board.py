@@ -19,11 +19,11 @@ class Board(Base):
     def __repr__(self):
         return 'Board(board_id={}, member_id={}, title={}, content={}, regdate={})'.format(self.id, self.member_id, self.title, self.content, self.regdate)
 
-engine = create_engine('mysql+mysqlconnector://root:munnin00@127.0.0.1/stockdb?charset=utf8', encoding='utf8', echo=True)
-Base.metadata.create_all(engine)
+engine = create_engine('mysql+mysqlconnector://root:root@127.0.0.1/stockdb?charset=utf8', encoding='utf8', echo=True)
+# Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
-session.add(Board(member_id=1, title='test', content='test입니다.'))
+# session.add(Board(member_id=1, title='test', content='test입니다.'))
 query = session.query(Board).filter((Board.title == 'test'))
 print(f'query: {query}')
 for b in query:
