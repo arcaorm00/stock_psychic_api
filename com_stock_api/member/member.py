@@ -29,11 +29,11 @@ class Member(Base):
         .format(self.id, self.email, self.password, self.name, self.geography, self.age, self.tenure, self.balance, self.has_credit, self.is_active_member, self.estimated_salary, self.role, self.exited)
 
 
-engine = create_engine('mysql+mysqlconnector://root:munnin00@127.0.0.1/mariadb?charset=utf8', encoding='utf8', echo=True)
-# Base.metadata.create_all(engine)
+engine = create_engine('mysql+mysqlconnector://root:munnin00@127.0.0.1/stockdb?charset=utf8', encoding='utf8', echo=True)
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
-# session.add(Member(email='test@test.com', password='1234', name='test', geography='', age=30, tenure=0, balance=0.0, has_credit=0, is_active_member=1, estimated_salary=0, role='ROLE_USER', exited=0))
+session.add(Member(email='test@test.com', password='1234', name='test', geography='', age=30, tenure=0, balance=0.0, has_credit=0, is_active_member=1, estimated_salary=0, role='ROLE_USER', exited=0))
 query = session.query(Member).filter((Member.name == 'test'))
 print(f'query: {query}')
 for m in query:

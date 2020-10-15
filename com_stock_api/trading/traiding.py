@@ -23,7 +23,7 @@ class Trading(Base):
         return 'Trading(trading_id={}, member_id={}, kospi_stock_id={}, nasdaq_stock_id={}, price={}, date={})'.format(self.id, self.member_id, self.kospi_stock_id, self.nasdaq_stock_id, self.price, self.date)
 
 
-engine = create_engine('mysql+mysqlconnector://root:munnin00@127.0.0.1/mariadb?charset=utf8', encoding='utf8', echo=True)
+engine = create_engine('mysql+mysqlconnector://root:munnin00@127.0.0.1/stockdb?charset=utf8', encoding='utf8', echo=True)
 # Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
