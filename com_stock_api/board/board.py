@@ -14,7 +14,7 @@ class Board(Base):
     member_id = Column(Integer, ForeignKey(Member.id))
     title = Column(VARCHAR(50), nullable=False)
     content = Column(VARCHAR(5000))
-    regdate = Column(DateTime, default=datetime.datetime.utcnow)
+    regdate = Column(DateTime, default=datetime.datetime.now())
 
     def __repr__(self):
         return 'Board(board_id={}, member_id={}, title={}, content={}, regdate={})'.format(self.id, self.member_id, self.title, self.content, self.regdate)
