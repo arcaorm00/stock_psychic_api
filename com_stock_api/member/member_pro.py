@@ -187,7 +187,6 @@ class MemberModelingDataPreprocessing:
         # 데이터 정제
         this = self.geography_nominal(this)
         this = self.gender_nominal(this)
-        print(f'gender 정제후: {this}')
         this = self.age_ordinal(this)
         this = self.drop_feature(this, 'Age')
         this = self.creditScore_ordinal(this)
