@@ -207,7 +207,7 @@ class MemberModelingDataPreprocessing:
         # this.label = self.create_label(this)
         # this.train = self.create_train(this)
         
-        print(this)
+        # print(this)
         
 
     # 고객의 서비스 이탈과 각 칼럼간의 상관계수
