@@ -1,61 +1,73 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.mysql import DECIMAL, VARCHAR, FLOAT
+from com_stock_api.ext import db
 
-class Member(Base):
+class MemberDto(db.Model):
 
     __tablename__ = "members"
     __table_args__ = {"mysql_collate": "utf8_general_ci"}
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(VARCHAR(100), unique=True, nullable=False)
-    password = Column(VARCHAR(50), nullable=False)
-    name = Column(VARCHAR(50))
-    geography = Column(VARCHAR(30))
-    age = Column(Integer)
-    tenure = Column(Integer)
-    balance = Column(FLOAT)
-    has_credit = Column(Integer)
-    is_active_member = Column(Integer)
-    estimated_salary = Column(FLOAT)
-    role = Column(VARCHAR(30))
-    exited = Column(Integer)
+    email: str = db.Column(db.String(100), primary_key=True, index=True)
+    password: str = db.Column(db.String(50), nullable=False)
+    name: str = db.Column(db.String(50))
+    geography: str = db.Column(db.String(50))
+    gender: str = db.Column(db.String(10))
+    age: int = db.Column(db.Integer)
+    tenure: int = db.Column(db.Integer, default=0)
+    stock_qty: int = db.Column(db.Integer, default=0)
+    balance: float = db.Column(db.FLOAT, default=0.0)
+    has_credit: int = db.Column(db.Integer)
+    credit_score: int = db.Column(db.Integer)
+    is_active_member: int = db.Column(db.Integer, default=1)
+    estimated_salary: float = db.Column(db.FLOAT)
+    role: str = db.Column(db.String(30), default='ROLE_USER')
+    exited: int = db.Column(db.Integer, default=0)
+
+    def __init__(self, email, password, name, geography, gender, age, tenure, stock_qty, balance, has_credit, credit_score, is_active_member, estimated_salary, role, exited):
+        self.email = email
+        self.password = password
+        self.name = name
+        self.geography = geography
+        self.gender = gender
+        self.age = age
+        self.tenure = tenure
+        self.stock_qty = stock_qty
+        self.balance = balance
+        self.has_credit = has_credit
+        self.credit_score = credit_score
+        self.is_active_member = is_active_member
+        self.estimated_salary = estimated_salary
+        self.role = role
+        self.exited = exited
 
     def __repr__(self):
         return 'Member(member_id={}, email={}, password={},'\
-        'name={}, geography={}, age={}, tenure={}, balance={},'\
-        'hasCrCard={}, isActiveMember={}, estimatedSalary={}, role={}, exited={}'\
-        .format(self.id, self.email, self.password, self.name, self.geography, self.age, self.tenure, self.balance, self.has_credit, self.is_active_member, self.estimated_salary, self.role, self.exited)
+        'name={}, geography={}, gender={}, age={}, tenure={}, stock_qty={}, balance={},'\
+        'hasCrCard={}, credit_score={}, isActiveMember={}, estimatedSalary={}, role={}, exited={}'\
+        .format(self.id, self.email, self.password, self.name, self.geography, self.gender, self.age, self.tenure, self.stock_qty, self.balance, self.has_credit, self.credit_score, self.is_active_member, self.estimated_salary, self.role, self.exited)
 
     @property
-    def serialize(self):
+    def json(self):
         return {
-            'id': self.id,
             'email': self.email,
             'password': self.password,
             'name': self.name,
             'geography': self.geography,
+            'gender': self.gender,
             'age': self.age,
             'tenure': self.tenure,
+            'stock_qty': self.stock_qty,
             'balance': self.balance,
             'has_credit': self.has_credit,
+            'credit_score': self.credit_score,
             'is_active_member': self.is_active_member,
             'estimated_salary': self.estimated_salary,
             'role': self.role,
             'exited': self.exited
         }
 
-class MemberDto(object):
-    id: int
-    email: str
-    password: str
-    name: str
-    geography: str
-    age: int
-    tenure: int
-    balance: float
-    has_credit: int
-    is_active_member: int
-    extimated_salary: float
-    role: str
-    exited: int
+    def save(self):
+        db.session.add(self)
+        db.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.commit()
