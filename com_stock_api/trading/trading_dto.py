@@ -18,7 +18,7 @@ class Trading(Base):
     # nasdaq_stock_id = Column(Integer, ForeignKey(YhFinance.id))
     stock_qty = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
-    date = Column(DateTime, default=datetime.datetime.now())
+    date = Column(DateTime)
 
     def __repr__(self):
         return 'Trading(trading_id={}, member_id={}, kospi_stock_id={}, nasdaq_stock_id={}, price={}, date={})'.format(self.id, self.member_id, self.kospi_stock_id, self.nasdaq_stock_id, self.price, self.date)

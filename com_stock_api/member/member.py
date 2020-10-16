@@ -15,12 +15,12 @@ class Member(Base):
     geography = Column(VARCHAR(30))
     age = Column(Integer)
     tenure = Column(Integer)
-    balance = Column(FLOAT)
+    balance = Column(FLOAT, default=0.0)
     has_credit = Column(Integer)
-    is_active_member = Column(Integer)
+    is_active_member = Column(Integer, default=1)
     estimated_salary = Column(FLOAT)
-    role = Column(VARCHAR(30))
-    exited = Column(Integer)
+    role = Column(VARCHAR(30), default='ROLE_USER')
+    exited = Column(Integer, default=0)
 
     def __repr__(self):
         return 'Member(member_id={}, email={}, password={},'\
@@ -33,7 +33,7 @@ engine = create_engine('mysql+mysqlconnector://root:root@127.0.0.1/stockdb?chars
 # Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
-# session.add(Member(email='test@test.com', password='1234', name='test', geography='', age=30, tenure=0, balance=0.0, has_credit=0, is_active_member=1, estimated_salary=0, role='ROLE_USER', exited=0))
+# session.add(Member(email='test@test.com', password='1234', name='test', geography='', age=30, tenure=0, has_credit=0, estimated_salary=0))
 query = session.query(Member).filter((Member.name == 'test'))
 print(f'query: {query}')
 for m in query:

@@ -2,7 +2,7 @@ from com_stock_api.ext.db import Base
 import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.mysql import DECIMAL, VARCHAR
+from sqlalchemy.dialects.mysql import DECIMAL, VARCHAR, LONGTEXT
 from com_stock_api.member.member import Member
 
 class Board(Base):
@@ -13,7 +13,7 @@ class Board(Base):
     id = Column(Integer, primary_key=True, index=True)
     member_id = Column(Integer, ForeignKey(Member.id))
     title = Column(VARCHAR(50), nullable=False)
-    content = Column(VARCHAR(5000))
+    content = Column(LONGTEXT())
     regdate = Column(DateTime, default=datetime.datetime.now())
 
     def __repr__(self):
