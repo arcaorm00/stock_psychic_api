@@ -13,7 +13,7 @@ class Trading(db.Model):
     # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(NaverFinance.id))
     # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinance.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
-    price: int = db.Column(db.Integer, nullable=False)
+    price: float = db.Column(db.Integer, nullable=False)
     trading_date: datetime = db.Column(db.datetime)
 
     def __init__(self, id, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
@@ -37,7 +37,7 @@ class Trading(db.Model):
             'nasdaq_stock_id': self.nasdaq_stock_id,
             'stock_qty': self.stock_qty,
             'price': self.price,
-            'date': self.date
+            'trading_date': self.trading_date
         }
 
     def save(self):

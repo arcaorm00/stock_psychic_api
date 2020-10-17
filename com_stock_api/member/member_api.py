@@ -28,7 +28,7 @@ class MemberApi(object):
         try:
             member.save()
         except:
-            return {'message': 'An error occured inserting the articls'}, 500
+            return {'message': 'An error occured inserting the members'}, 500
         return member.json(), 201
     
     def get(self, email):
@@ -36,17 +36,17 @@ class MemberApi(object):
         if member:
             return member.json()
         return {'message': 'Member not found'}, 404
-        
+
     def put(self, email):
         data = self.parser.parse_args()
         member = MemberDao.find_by_email(email)
 
-        # 이거 뭘 하는거지? 
+        # 이거 뭘 하는거지?
         member.gender = data['gender']
         member.age = data['age']
         member.save()
         return member.json()
-    
-    class Members(Resource):
-        def get(self):
-            return {'members': list(map(lambda member: member.json(), MemberDao.find_all()))}
+
+class Members(Resource):
+    def get(self):
+        return {'members': list(map(lambda member: member.json(), MemberDao.find_all()))}

@@ -9,16 +9,16 @@ class CommentDto(db.Model):
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     board_id: int = db.Column(db.Integer, db.ForeignKey(BoardDto.id))
-    member_id: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
     comment: str = db.Column(db.String(500), nullable=False)
     regdate: datetime = db.Column(db.datetime)
     comment_ref: int = db.Column(db.Integer)
     comment_level: int = db.Column(db.Integer)
     comment_step: int = db.Column(db.Integer)
 
-    def __init__(self, board_id, member_id, comment, regdate, comment_ref, comment_level, comment_step):
+    def __init__(self, board_id, email, comment, regdate, comment_ref, comment_level, comment_step):
         self.board_id = board_id
-        self.member_id = member_id
+        self.email = email
         self.comment = comment
         self.regdate = regdate
         self.comment_ref = comment_ref
@@ -26,14 +26,14 @@ class CommentDto(db.Model):
         self.comment_step = comment_step
 
     def __repr__(self):
-        return f'id={self.id}, board_id={self.board_id}, member_id={self.member_id}, comment={self.comment}, regdate={self.regdate}, ref={self.comment_ref}, level={self.comment_level}, step={self.comment_step}'
+        return f'id={self.id}, board_id={self.board_id}, email={self.email}, comment={self.comment}, regdate={self.regdate}, ref={self.comment_ref}, level={self.comment_level}, step={self.comment_step}'
 
     @property
     def json(self):
         return {
             'id': self.id,
             'board_id': self.board_id,
-            'member_id': self.member_id,
+            'email': self.email,
             'comment': self.comment,
             'regdate': self.regdate,
             'comment_ref': self.comment_ref,
