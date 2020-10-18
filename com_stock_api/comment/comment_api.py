@@ -1,4 +1,3 @@
-from typing import List
 from flask_restful import Resource, reqparse
 from com_stock_api.comment.comment_dao import CommentDao
 from com_stock_api.comment.comment_dto import CommentDto

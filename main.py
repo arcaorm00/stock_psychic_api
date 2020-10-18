@@ -6,7 +6,7 @@ from com_stock_api.member.member_api import MemberApi, Members
 from com_stock_api.board.board_api import BoardApi, Boards
 from com_stock_api.comment.comment_api import CommentApi, Comments
 # from com_stock_api.trading.trading_api import TradingApi, Tradings
-
+from com_stock_api.memberChurn_pred.memberChurn_pred_api import MemberChurnPredApi, MemberChurnPreds
 app = Flask(__name__)
 print('====== url ======')
 print(url)
