@@ -6,9 +6,9 @@ class MemberChurnPredApi(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('prob_churn', type=float, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('prob_churn', type=float, required=True, help='This field cannot be left blank')
 
     def post(self):
         data = self.parser.parse_args()

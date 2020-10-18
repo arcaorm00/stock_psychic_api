@@ -6,14 +6,14 @@ import datetime
 class CommentApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('board_id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('comment', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('regdate', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('comment_ref', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('comment_level', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('comment_step', type=int, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('board_id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('comment', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('regdate', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('comment_ref', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('comment_level', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('comment_step', type=int, required=True, help='This field cannot be left blank')
         
     def post(self):
         data = self.parser.parse_args()

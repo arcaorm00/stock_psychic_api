@@ -9,7 +9,7 @@ class RecommendStockDto(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
-    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     stock_type: str = db.Column(db.String(50), nullable=True)
     # stock_id: int = db.Collumn(db.Integer, db.ForeignKey(NaverFinance.id if stock_type =='KOSPI' else YhFinance.id))
 

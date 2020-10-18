@@ -7,10 +7,10 @@ class RecommendStockApi(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('stock_type', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('stock_id', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('stock_type', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('stock_id', type=str, required=True, help='This field cannot be left blank')
 
 
     def post(self):

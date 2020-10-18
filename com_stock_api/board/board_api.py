@@ -6,11 +6,12 @@ from com_stock_api.board.board_dto import BoardDto
 class BoardApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('title', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('content', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('regdate', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('article_type', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('title', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('content', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('regdate', type=str, required=True, help='This field cannot be left blank')
         
     def post(self):
         data = self.parser.parse_args()
@@ -31,6 +32,7 @@ class BoardApi(Resource):
         data = self.parser.parse_args()
         board = BoardDao.find_by_id(id)
 
+        board.article_type = data['article_type']
         board.title = data['title']
         board.content = data['content']
         board.regdate = data['regdate']

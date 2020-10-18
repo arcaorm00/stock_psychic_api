@@ -6,13 +6,13 @@ from com_stock_api.trading.trading_dto import TradingDto
 class TradingApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
         parser.add_argument('kospi_stock_id', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('nasdaq_stock_id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('stock_qty', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('price', type=float, required=False, help='This field cannot be left blank')
-        parser.add_argument('trading_date', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('stock_qty', type=int, required=True, help='This field cannot be left blank')
+        parser.add_argument('price', type=float, required=True, help='This field cannot be left blank')
+        parser.add_argument('trading_date', type=str, required=True, help='This field cannot be left blank')
         
     def post(self):
         data = self.parser.parse_args()

@@ -7,7 +7,7 @@ class MemberChurnPredDto(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
-    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     probability_churn: float = db.Column(db.FLOAT, nullable=False)
 
     def __init__(self, id, email, probability_churn):

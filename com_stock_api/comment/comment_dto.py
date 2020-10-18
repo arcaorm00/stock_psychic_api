@@ -9,13 +9,13 @@ class CommentDto(db.Model):
     __table_args__ = {"mysql_collate": "utf8_general_ci"}
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
-    board_id: int = db.Column(db.Integer, db.ForeignKey(BoardDto.id))
-    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
+    board_id: int = db.Column(db.Integer, db.ForeignKey(BoardDto.id), nullable=False)
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     comment: str = db.Column(db.String(500), nullable=False)
-    regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
-    comment_ref: int = db.Column(db.Integer)
-    comment_level: int = db.Column(db.Integer)
-    comment_step: int = db.Column(db.Integer)
+    regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now(), nullable=False)
+    comment_ref: int = db.Column(db.Integer, nullable=False)
+    comment_level: int = db.Column(db.Integer, nullable=False)
+    comment_step: int = db.Column(db.Integer, nullable=False)
 
     def __init__(self, board_id, email, comment, regdate, comment_ref, comment_level, comment_step):
         self.board_id = board_id

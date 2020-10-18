@@ -9,25 +9,28 @@ class BoardDto(db.Model):
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
+    article_type: str = db.Column(db.String(50), nullable=False)
     title: str = db.Column(db.String(50), nullable=False)
     content: str = db.Column(db.String(20000), nullable=False)
     regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
 
-    def __init__(self, id, email, title, content, regdate):
+    def __init__(self, id, email, article_type, title, content, regdate):
         self.id = id
         self.email = email
+        self.article_type = article_type
         self.title = title
         self.content = content
         self.regdate = regdate
 
     def __repr__(self):
-        return 'Board(id={}, email={}, title={}, content={}, regdate={})'.format(self.id, self.email, self.title, self.content, self.regdate)
+        return 'Board(id={}, email={}, article_type={}, title={}, content={}, regdate={})'.format(self.id, self.email, self.article_type, self.title, self.content, self.regdate)
 
     @property
     def json(self):
         return {
             'id': self.id,
-            'member_id': self.member_id,
+            'email': self.email,
+            'article_type': self.article_type,
             'title': self.title,
             'content': self.content,
             'regdate': self.regdate

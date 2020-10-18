@@ -7,10 +7,10 @@ import datetime
 class TradingDto(db.Model):
 
     __tablename__ = "tradings"
-    __table_args__ = {"mysql_collate": "utf8_general_ci"}
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
-    email: str = db.Column(db.Integer, db.ForeignKey(MemberDto.email))
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
     # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(NaverFinance.id))
     # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinance.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
