@@ -1,6 +1,7 @@
 from com_stock_api.ext.db import db
 from com_stock_api.board.board_dto import BoardDto
 from com_stock_api.member.member_dto import MemberDto
+import datetime
 
 class CommentDto(db.Model):
 
@@ -11,7 +12,7 @@ class CommentDto(db.Model):
     board_id: int = db.Column(db.Integer, db.ForeignKey(BoardDto.id))
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
     comment: str = db.Column(db.String(500), nullable=False)
-    regdate: datetime = db.Column(db.datetime)
+    regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
     comment_ref: int = db.Column(db.Integer)
     comment_level: int = db.Column(db.Integer)
     comment_step: int = db.Column(db.Integer)

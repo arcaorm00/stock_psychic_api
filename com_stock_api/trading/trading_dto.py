@@ -2,8 +2,9 @@ from com_stock_api.ext.db import db
 from com_stock_api.member.member_dto import MemberDto
 # from com_stock_api.yhfinance.yhfinance import YhFinance
 # from com_stock_api.naverfinance.naverfinance import NaverFinance
+import datetime
 
-class Trading(db.Model):
+class TradingDto(db.Model):
 
     __tablename__ = "tradings"
     __table_args__ = {"mysql_collate": "utf8_general_ci"}
@@ -14,7 +15,7 @@ class Trading(db.Model):
     # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinance.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
     price: float = db.Column(db.Integer, nullable=False)
-    trading_date: datetime = db.Column(db.datetime)
+    trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
 
     def __init__(self, id, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
         self.id = id

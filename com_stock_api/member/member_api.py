@@ -3,7 +3,7 @@ from flask_restful import Resource, reqparse
 from com_stock_api.member.member_dao import MemberDao
 from com_stock_api.member.member_dto import MemberDto
 
-class MemberApi(object):
+class MemberApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')

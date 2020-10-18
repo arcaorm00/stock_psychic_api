@@ -2,9 +2,8 @@ from typing import List
 from flask_restful import Resource, reqparse
 from com_stock_api.trading.trading_dao import TradingDao
 from com_stock_api.trading.trading_dto import TradingDto
-import datetime
 
-class TradingApi(object):
+class TradingApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
@@ -13,7 +12,7 @@ class TradingApi(object):
         parser.add_argument('nasdaq_stock_id', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('stock_qty', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('price', type=float, required=False, help='This field cannot be left blank')
-        parser.add_argument('trading_date', type=datetime, required=False, help='This field cannot be left blank')
+        parser.add_argument('trading_date', type=str, required=False, help='This field cannot be left blank')
         
     def post(self):
         data = self.parser.parse_args()

@@ -4,14 +4,14 @@ from com_stock_api.comment.comment_dao import CommentDao
 from com_stock_api.comment.comment_dto import CommentDto
 import datetime
 
-class CommentApi(object):
+class CommentApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('board_id', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
         parser.add_argument('comment', type=str, required=False, help='This field cannot be left blank')
-        parser.add_argument('regdate', type=datetime, required=False, help='This field cannot be left blank')
+        parser.add_argument('regdate', type=str, required=False, help='This field cannot be left blank')
         parser.add_argument('comment_ref', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('comment_level', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('comment_step', type=int, required=False, help='This field cannot be left blank')

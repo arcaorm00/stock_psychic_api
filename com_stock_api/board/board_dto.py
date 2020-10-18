@@ -10,8 +10,8 @@ class BoardDto(db.Model):
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     title: str = db.Column(db.String(50), nullable=False)
-    content: str = db.Column(db.LONGTEXT, nullable=False)
-    regdate: datetime = db.Column(db.datetime, default=datetime.datetime.now())
+    content: str = db.Column(db.String(20000), nullable=False)
+    regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
 
     def __init__(self, id, email, title, content, regdate):
         self.id = id

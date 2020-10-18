@@ -1,4 +1,4 @@
-from com_stock_api.ext import db
+from com_stock_api.ext.db import db
 
 class MemberDto(db.Model):
 

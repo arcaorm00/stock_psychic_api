@@ -2,16 +2,15 @@ from typing import List
 from flask_restful import Resource, reqparse
 from com_stock_api.board.board_dao import BoardDao
 from com_stock_api.board.board_dto import BoardDto
-import datetime
 
-class BoardApi(object):
+class BoardApi(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('email', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('title', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('content', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('regdate', type=datetime, required=False, help='This field cannot be left blank')
+        parser.add_argument('email', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('title', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('content', type=str, required=False, help='This field cannot be left blank')
+        parser.add_argument('regdate', type=str, required=False, help='This field cannot be left blank')
         
     def post(self):
         data = self.parser.parse_args()
