@@ -31,7 +31,7 @@ class MemberChurnPredApi(Resource):
         data = self.parser.parse_args()
         pred = MemberChurnPredDao.find_by_id(id)
 
-        pred.title = data['prob_churn']
+        pred.prob_churn = data['prob_churn']
         pred.save()
         return pred.json()
 

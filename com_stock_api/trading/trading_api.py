@@ -41,4 +41,4 @@ class TradingApi(Resource):
 
 class Tradings(Resource):
     def get(self):
-        return {'tradings': list(map(lambda trading: trading.json()))}
+        return {'tradings': list(map(lambda trading: trading.json(), TradingDao.find_all()))}
