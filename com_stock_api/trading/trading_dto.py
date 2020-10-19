@@ -1,7 +1,7 @@
 from com_stock_api.ext.db import db
 from com_stock_api.member.member_dto import MemberDto
-# from com_stock_api.yhfinance.yhfinance import YhFinance
-# from com_stock_api.naverfinance.naverfinance import NaverFinance
+# from com_stock_api.yhfinance.yhfinance_dto import YhFinanceDto
+# from com_stock_api.naverfinance.naverfinance_dto import NaverFinanceDto
 import datetime
 
 class TradingDto(db.Model):
@@ -11,8 +11,8 @@ class TradingDto(db.Model):
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
-    # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(NaverFinance.id))
-    # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinance.id))
+    # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(NaverFinanceDto.id))
+    # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinanceDto.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
     price: float = db.Column(db.Integer, nullable=False)
     trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
