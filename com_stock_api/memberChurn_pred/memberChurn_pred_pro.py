@@ -28,10 +28,10 @@ class MemberChurnPred:
 
     def hook(self):
         self.get_data()
-        # self.create_model()
-        # self.train_model()
-        # self.eval_model()
-        # self.debug_model()
+        self.create_model()
+        self.train_model()
+        self.eval_model()
+        self.debug_model()
         self.get_prob()
 
     def create_train(self, this):
@@ -88,12 +88,18 @@ class MemberChurnPred:
         print(f'self.validation_data: \n{(self.x_validation, self.y_validation)}')
         print(f'self.test_data: \n{(self.x_test, self.y_test)}')
 
+    # ---------- 확률 ----------
+    member_id_list = []
+    model_y_list = []
+    true_y_list = []
+    prob_churn_list = []
 
     def get_prob(self):
         self.reader.context = os.path.join(baseurl, os.path.join('member', 'saved_data'))
         self.reader.fname = 'member_refined.csv'
         data = self.reader.csv_to_dframe()
         y = data['Exited']
+        member_ids = data['CustomerId']
         data = self.create_train(data)
         
         data = data.to_numpy()
@@ -107,22 +113,37 @@ class MemberChurnPred:
 
         refine_data = scaler.transform(data)
         model_answers = self.model.predict(refine_data)
-        print(model_answers)
-        print(y)
-        proba = self.model.predict_proba(refine_data)
-        print(proba)
-        # print(proba[1][0])
-        churn_proba = np.array(proba[i][1] for i in range(len(proba)))
-        print(type(churn_proba))
-        self.modify_feature()
-        self.save_proba_file(data, churn_proba, proba)
+        
+        self.member_id_list = member_ids.tolist()
+        self.model_y_list = model_answers.tolist()
+        # print(self.model_y_list)
+        self.true_y_list = y.tolist()
 
-    def modify_feature(self):
-        ...
+        proba = self.model.predict_proba(refine_data)
+        # print(proba)
+        # print(proba[1][0])
+        churn_proba = np.array([proba[i][1] for i in range(len(proba))])
+        # print(churn_proba)
+
+        self.prob_churn_list = churn_proba.tolist()
+
+        self.save_proba_file(data, churn_proba, proba)
 
     def save_proba_file(self, data, churn_proba, proba):
         columns = ['회원ID', '모델 답', '실제 답', '이탈 가능성']
+        refined_dict = {
+            'MemberID': self.member_id_list,
+            'Model_Y': self.model_y_list,
+            'True_Y': self.true_y_list,
+            'Prob_churn': self.prob_churn_list
+        }
+
+        refined_data = pd.DataFrame(refined_dict)
+        print(refined_data)
         
+        context = os.path.join(os.path.join(baseurl, 'memberChurn_pred'), 'saved_data')
+        refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'))
+        print('file saved')
 
         
 
