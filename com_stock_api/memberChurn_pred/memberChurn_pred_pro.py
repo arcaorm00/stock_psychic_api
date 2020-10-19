@@ -3,11 +3,15 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 baseurl = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import tensorflow_hub as hub
 from com_stock_api.utils.file_helper import FileReader
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 class MemberChurnPred:
 
@@ -24,17 +28,16 @@ class MemberChurnPred:
 
     def hook(self):
         self.get_data()
-        self.create_model()
-        self.train_model()
-        self.eval_model()
-        self.debug_model()
+        # self.create_model()
+        # self.train_model()
+        # self.eval_model()
+        # self.debug_model()
+        self.get_prob()
 
-    @staticmethod
-    def create_train(this):
+    def create_train(self, this):
         return this.drop('Exited', axis=1)
 
-    @staticmethod
-    def create_label(this):
+    def create_label(self, this):
         return this['Exited']
 
     def get_data(self):
@@ -84,6 +87,44 @@ class MemberChurnPred:
         print(f'self.train_data: \n{(self.x_train, self.y_train)}')
         print(f'self.validation_data: \n{(self.x_validation, self.y_validation)}')
         print(f'self.test_data: \n{(self.x_test, self.y_test)}')
+
+
+    def get_prob(self):
+        self.reader.context = os.path.join(baseurl, os.path.join('member', 'saved_data'))
+        self.reader.fname = 'member_refined.csv'
+        data = self.reader.csv_to_dframe()
+        y = data['Exited']
+        data = self.create_train(data)
+        
+        data = data.to_numpy()
+
+        scaler = StandardScaler()
+        self.x_train = scaler.fit_transform(self.x_train)
+        self.x_test = scaler.transform(self.x_test)
+
+        self.model = LogisticRegression()
+        self.model.fit(self.x_train, self.y_train)
+
+        refine_data = scaler.transform(data)
+        model_answers = self.model.predict(refine_data)
+        print(model_answers)
+        print(y)
+        proba = self.model.predict_proba(refine_data)
+        print(proba)
+        # print(proba[1][0])
+        churn_proba = np.array(proba[i][1] for i in range(len(proba)))
+        print(type(churn_proba))
+        self.modify_feature()
+        self.save_proba_file(data, churn_proba, proba)
+
+    def modify_feature(self):
+        ...
+
+    def save_proba_file(self, data, churn_proba, proba):
+        columns = ['회원ID', '모델 답', '실제 답', '이탈 가능성']
+        
+
+        
 
 
 if __name__ == '__main__':
