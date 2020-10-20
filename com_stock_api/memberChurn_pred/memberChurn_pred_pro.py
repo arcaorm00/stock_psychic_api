@@ -108,20 +108,20 @@ class MemberChurnPred:
         self.x_train = scaler.fit_transform(self.x_train)
         self.x_test = scaler.transform(self.x_test)
 
-        self.model = LogisticRegression()
-        self.model.fit(self.x_train, self.y_train)
+        new_model = LogisticRegression()
+        new_model.fit(self.x_train, self.y_train)
 
         refine_data = scaler.transform(data)
-        model_answers = self.model.predict(refine_data)
+        model_answers = new_model.predict(refine_data)
         
         self.member_id_list = member_ids.tolist()
         self.model_y_list = model_answers.tolist()
         # print(self.model_y_list)
         self.true_y_list = y.tolist()
 
-        proba = self.model.predict_proba(refine_data)
-        # print(proba)
-        # print(proba[1][0])
+        proba = new_model.predict_proba(refine_data)
+        print(proba)
+        print(proba[1][0])
         churn_proba = np.array([proba[i][1] for i in range(len(proba))])
         # print(churn_proba)
 
