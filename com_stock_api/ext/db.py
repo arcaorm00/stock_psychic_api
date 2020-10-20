@@ -5,11 +5,11 @@ db = SQLAlchemy()
 Base = declarative_base()
 
 config = {
-    'user': 'root',
-    'password': 'root',
-    'host': 'localhost',
+    'user': 'stockpsychic',
+    'password': 'stockpsychic',
+    'host': 'stockpsychic.ceq7fgqi0yai.ap-northeast-2.rds.amazonaws.com',
     'port': '3306',
-    'database': 'stockdb'
+    'database': 'stockpsychic'
 }
 
 charset = {'utf8': 'utf8'}
