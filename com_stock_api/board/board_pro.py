@@ -45,7 +45,7 @@ class BoardPro:
     def save_data(self, data):
         self.reader.context = os.path.join(basedir, 'saved_data')
         self.reader.fname = 'korea_news_database.csv'
-        data.to_csv(self.reader.new_file())
+        data.to_csv(self.reader.new_file(), index=False)
         print('file saved')
 
 if __name__ == '__main__':
