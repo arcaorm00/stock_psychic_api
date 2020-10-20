@@ -8,8 +8,11 @@ from com_stock_api.comment.comment_api import CommentApi, Comments
 from com_stock_api.trading.trading_api import TradingApi, Tradings
 from com_stock_api.memberChurn_pred.memberChurn_pred_api import MemberChurnPredApi, MemberChurnPreds
 from com_stock_api.recommend_stock.recommend_stock_api import RecommendStockApi, RecommendStocks
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 print('====== url ======')
 print(url)
 app.config['SQLALCHEMY_DATABASE_URI'] = url
@@ -25,3 +28,7 @@ initialize_routes(api)
 
 with app.app_context():
     db.create_all()
+
+@app.route('/api')
+def connect_test():
+    return {'message': 'connect success'}

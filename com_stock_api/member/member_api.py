@@ -8,6 +8,7 @@ class MemberApi(Resource):
         parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
         parser.add_argument('password', type=str, required=True, help='This field cannot be left blank')
         parser.add_argument('name', type=str, required=True, help='This field cannot be left blank')
+        parser.add_argument('profile', type=str, required=False, default='noimage.png')
         parser.add_argument('geography', type=str, required=False)
         parser.add_argument('gender', type=str, required=False)
         parser.add_argument('age', type=int, required=False)
@@ -23,7 +24,7 @@ class MemberApi(Resource):
 
     def post(self):
         data = self.parser.parse_args()
-        member = MemberDto(data['email'], data['password'], data['name'], data['geography'], data['gender'], data['age'], data['tenure'], data['stock_qty'], data['balance'], data['has_credit'], data['credit_score'], data['is_active_member'], data['estimated_salary'], data['role'], data['exited'])
+        member = MemberDto(data['email'], data['password'], data['name'], data['profile'], data['geography'], data['gender'], data['age'], data['tenure'], data['stock_qty'], data['balance'], data['has_credit'], data['credit_score'], data['is_active_member'], data['estimated_salary'], data['role'], data['exited'])
         try:
             member.save()
         except:

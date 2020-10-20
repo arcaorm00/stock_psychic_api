@@ -10,7 +10,7 @@ class TradingDto(db.Model):
     __table_args__ = {'mysql_collate': 'utf8_general_ci'}
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
-    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email))
+    email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(NaverFinanceDto.id))
     # nasdaq_stock_id: int = Column(db.Integer, db.ForeignKey(YhFinanceDto.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
