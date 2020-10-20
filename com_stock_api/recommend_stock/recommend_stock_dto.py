@@ -1,7 +1,5 @@
 from com_stock_api.ext.db import db
 from com_stock_api.member.member_dto import MemberDto
-# from com_stock_api.yhfinance.yhfinance import YhFinance
-# from com_stock_api.naverfinance.naverfinance import NaverFinance
 
 class RecommendStockDto(db.Model):
 
@@ -11,7 +9,7 @@ class RecommendStockDto(db.Model):
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
     stock_type: str = db.Column(db.String(50), nullable=True)
-    # stock_id: int = db.Collumn(db.Integer, db.ForeignKey(NaverFinance.id if stock_type =='KOSPI' else YhFinance.id))
+    stock_id: int = db.Collumn(db.Integer, nullable=False)
 
     def __init__(self, id, email, stock_type, stock_id):
         self.id = id

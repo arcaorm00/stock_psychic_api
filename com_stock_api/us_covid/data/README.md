@@ -1,0 +1,1 @@
+Data resource : nytimes
