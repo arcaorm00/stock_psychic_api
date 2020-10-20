@@ -7,7 +7,8 @@ class Stock(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
 
-        parser.add_argument('stock_date', type=int, required=False, help='This field cannot be left blank')
+        parser.add_argument('id', type=int, required=False, help='This field cannot be left blank')
+        parser.add_argument('date', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('open', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('close', type=int, required=False, help='This field cannot be left blank')
         parser.add_argument('high', type=int, required=False, help='This field cannot be left blank')
@@ -17,7 +18,7 @@ class Stock(Resource):
 
     def post(self):
         data = self.parset.parse_args()
-        stock = StockDto(data['stock_date'],data['open'],data['close'],data['high'],data['low'],
+        stock = StockDto(data['date'],data['open'],data['close'],data['high'],data['low'],
         data['amount'],data['stock'])
         try:
             stock.save()
@@ -25,16 +26,17 @@ class Stock(Resource):
             return {'message':'An error occured inserting the stock'}, 500
         return stock.json(), 201
 
-    def get(self,stock_date):
-        stock = StockDao.find_by_id(stock_date)
+    def get(self,id):
+        stock = StockDao.find_by_id(id)
         if stock:
             return stock.json()
         return {'message': 'Stock not found'}, 404
 
-    def put (self, stock_date):
+    def put (self, id):
         data = Stock.parser.parse_args()
-        stock = StockDto.find_by_id(stock_date)
+        stock = StockDto.find_by_id(id)
 
+        stock.open = data['date']
         stock.open = data['open']
         stock.close = data['close']
         stock.high = data['high']

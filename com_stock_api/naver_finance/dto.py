@@ -5,8 +5,8 @@ class StockDto(db.Model):
     __tablename__ = 'naver_finance'
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
     
-    
-    finance_date : int = db.Column(db.DATE, primary_key = True, index=True)
+    id: int = db.Column(db.Integer, primary_key = True, index = True)
+    date : int = db.Column(db.DATETIME)
     open : int = db.Column(db.VARCHAR(30))
     close : int = db.Column(db.VARCHAR(30))
     high : int = db.Column(db.VARCHAR(30))
@@ -14,8 +14,9 @@ class StockDto(db.Model):
     amount : int = db.Column(db.VARCHAR(30))
     stock : str = db.Column(db.VARCHAR(30))
     
-    def __init__(self,finance_date, open, close, high, low, amount, stock):
-        self.finance_date = finance_date
+    def __init__(self,id,date, open, close, high, low, amount, stock):
+        self.id = id
+        self.date = date
         self.open = open
         self.close = close
         self.high = high
@@ -24,13 +25,14 @@ class StockDto(db.Model):
         self.stock = stock
     
     def __repr__(self):
-        return f'finance_date={self.finance_date}, open={self.open},\
+        return f'id={self.id},date={self.date}, open={self.open},\
             close ={self.close},high ={self.high},low ={self.low},amount ={self.amount},stock ={self.stock}'
             
     @property
     def json(self):
         return {
-            'finance_date': self.finance_date,
+            'id':self.id,
+            'finance': self.date,
             'open': self.open,
             'close': self.close,
             'high': self.high,

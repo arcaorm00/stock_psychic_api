@@ -6,27 +6,43 @@ from com_stock_api.ext.db import db
 class NewsDto(db.Model):
     __tablename__ = 'naver_news'
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
-    
-    news_date : int = db.Column(db.DATETIME, primary_key = True, index=True)
-    sentiment_analysis :str = db.Column(db.VARCHAR(30))
+
+    id: int = db.Column(db.Integer, primary_key = True, index = True)
+    date : int = db.Column(db.DATETIME)
+    headline : str = db.Column(db.String(255))
+    neg : float = db.Column(db.Float)
+    pos : float = db.Column(db.Float)
+    neu : float = db.Column(db.Float)
     keywords :str = db.Column(db.VARCHAR(30))
+    url :str = db.Column(db.VARCHAR(30))
+
     
-    def __init__(self,news_date, sentiment_analysis, keywords):
-        self.news_date = news_date
-        self.sentiment_analysis = sentiment_analysis
+    def __init__(self, id, date, headline, neg, pos, neu, keywords,url):
+        self.id = id
+        self.date = date
+        self.headline = headline
+        self.neg = neg
+        self.pos = pos
+        self.neu = neu
         self.keywords = keywords
+        self.url = url
         
     
     def __repr__(self):
-        return f'news_date={self.news_date}, sentiment_analysis={self.sentiment_analysis},\
-            keywords={self.keywords}'
+        return f'id={self.id},date={self.date}, headline={self.headline},\
+            neg={self.neg},pos={self.pos},neu={self.neu},keywords={self.keywords},url={self.url}'
             
     @property
     def json(self):
         return {
-            'news_date': self.news_date,
-            'sentiment_analysis' : self.sentiment_analysis,
-            'keywords' : self.keywords
+            'id':self.id,
+            'date': self.date,
+            'headline':self.headline,
+            'neg':self.neg,
+            'pos':self.pos,
+            'neu':self.neu,
+            'keywords':self.keywords,
+            'url':self.url
         }
 
     def save(self):
