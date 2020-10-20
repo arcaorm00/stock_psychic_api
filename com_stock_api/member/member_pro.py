@@ -48,8 +48,10 @@ class MemberDBDataProcessing:
         # print(f'이메일 추가 후: \n{this.train["Email"]}')
         this = service.role_nominal(this)
         # print(f'권한 추가 후: \n{this.train["Role"]}')
+        this = service.set_profileimage(this)
         self.datapath = os.path.join(basedir, 'saved_data')
         this.train.to_csv(os.path.join(self.datapath, 'member_detail.csv'), index=False)
+        print(this.train)
         return this
 
     def new_model(self, payload) -> object:
@@ -152,13 +154,19 @@ class MemberDBDataProcessing:
     def email_nominal(this):
         this.train['Email'] = ''
         for idx in range(len(this.train)):
-            this.train.loc[idx,'Email'] = str(uuid.uuid1()).split('-')[3] + '_' + str(this.train.loc[idx,'CustomerId']) + '@gmail.com'
+            this.train.loc[idx,'Email'] = str(this.train.loc[idx,'CustomerId']) + '@gmail.com'
         return this
     
     # 권한 추가 (모두 회원 권한)
     @staticmethod
     def role_nominal(this):
         this.train['Role'] = 'ROLE_USER'
+        return this
+
+    # 프로필 이미지 추가
+    @staticmethod
+    def set_profileimage(this):
+        this.train['Profile'] = 'noimage.png'
         return this
     
 
@@ -183,6 +191,7 @@ class MemberModelingDataPreprocessing:
         this = self.drop_feature(this, 'Email') # 이메일 삭제
         this = self.drop_feature(this, 'Role') # 권한 삭제
         this = self.drop_feature(this, 'Password') # 비밀번호 삭제
+        this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
         
         # 데이터 정제
         this = self.geography_nominal(this)
@@ -201,10 +210,6 @@ class MemberModelingDataPreprocessing:
 
         # 정제 데이터 저장
         self.save_preprocessed_data(this)
-
-        # 훈련 데이터, 레이블 데이터 분리
-        # this.label = self.create_label(this)
-        # this.train = self.create_train(this)
         
         # print(this)
         
@@ -217,7 +222,7 @@ class MemberModelingDataPreprocessing:
             cor = np.corrcoef(members[col], members['Exited'])
             # print(cor)
             member_correlation[col] = cor
-        print(member_correlation)
+        # print(member_correlation)
         '''
         r이 -1.0과 -0.7 사이이면, 강한 음적 선형관계,
         r이 -0.7과 -0.3 사이이면, 뚜렷한 음적 선형관계,
@@ -344,6 +349,7 @@ class MemberModelingDataPreprocessing:
         this.train['EstimatedSalary'] = pd.qcut(this.train['EstimatedSalary'], 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
         return this
 
+
     # ---------------------- 파일 저장 ---------------------- 
     def save_preprocessed_data(self, this):
         this.context = os.path.join(basedir, 'saved_data')
@@ -375,4 +381,3 @@ class MemberPro:
 if __name__ == '__main__':
     mp = MemberPro()
     mp.hook()
-    
