@@ -16,11 +16,11 @@ class BoardPro:
     def process(self):
         file_data = self.get_data()
         data = self.refine_data(file_data)
-        # self.save_data(data)
+        self.save_data(data)
 
     def get_data(self):
         self.reader.context = os.path.join(basedir, 'data')
-        self.reader.fname = 'korea_news_list.csv'
+        self.reader.fname = 'kyobo_notice.csv'
         notice_file = self.reader.csv_to_dframe()
         # print(notice_file)
         return notice_file
@@ -30,12 +30,14 @@ class BoardPro:
         # 컬럼명 변경
         data = data.rename({'제목': 'title', '내용': 'content', '작성일자': 'regdate'}, axis='columns')
         data['email'] = 'admin@admin.com'
+        data['article_type'] = 'Notice'
         data = data.drop('url', axis=1)
 
         # print(data['content'][1])
         for idx in range(len(data['content'])):
             con = re.sub('<!--(.+?)-->', '', str(data['content'][idx]))
             con = con.replace('<!--', '')
+            con = con.replace('교보증권', 'Stock Psychic')
             data['content'][idx] = con
         # data['regdate'] = ['20'+ regdate for regdate in data['regdate']]
 
@@ -44,7 +46,7 @@ class BoardPro:
 
     def save_data(self, data):
         self.reader.context = os.path.join(basedir, 'saved_data')
-        self.reader.fname = 'korea_news_database.csv'
+        self.reader.fname = 'kyobo_notice_database.csv'
         data.to_csv(self.reader.new_file(), index=False)
         print('file saved')
 
