@@ -38,6 +38,7 @@ class MemberDBDataProcessing:
         this.context = self.datapath
         this.train = service.new_model(data)
         # print(f'feature 드롭 전 변수: \n{this.train.columns}')
+        this = service.drop_feature(this, 'Exited')
         this = service.age_ordinal(this)
         # print(f'나이 정제 후: \n{this.train.head()}')
         this = service.estimatedSalary_ordinal(this)
@@ -179,19 +180,19 @@ class MemberModelingDataPreprocessing:
 
     def hook_process(self):
         this = self.filereader
-        this.context = os.path.join(basedir, 'saved_data')
+        this.context = os.path.join(basedir, 'data')
         # 데이터 정제 전 database data
-        this.fname = 'member_detail.csv'
+        this.fname = 'member_dataset.csv'
         members = this.csv_to_dframe()
         this.train = members
         
         # 컬럼 삭제
         this = self.drop_feature(this, 'RowNumber') # 열 번호 삭제
         this = self.drop_feature(this, 'Surname') # 이름 삭제
-        this = self.drop_feature(this, 'Email') # 이메일 삭제
-        this = self.drop_feature(this, 'Role') # 권한 삭제
-        this = self.drop_feature(this, 'Password') # 비밀번호 삭제
-        this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
+        # this = self.drop_feature(this, 'Email') # 이메일 삭제
+        # this = self.drop_feature(this, 'Role') # 권한 삭제
+        # this = self.drop_feature(this, 'Password') # 비밀번호 삭제
+        # this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
         
         # 데이터 정제
         this = self.geography_nominal(this)
@@ -354,6 +355,7 @@ class MemberModelingDataPreprocessing:
     def save_preprocessed_data(self, this):
         this.context = os.path.join(basedir, 'saved_data')
         this.train.to_csv(os.path.join(this.context, 'member_refined.csv'))
+        print('file saved')
 
     # ---------------------- label 컬럼 위치 조정 ---------------------- 
     def columns_relocation(self, this):
