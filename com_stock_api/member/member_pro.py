@@ -101,9 +101,9 @@ class MemberDBDataProcessing:
             7: 'Senior'
         }
 
-        for x in range(len(train['AgeGroup'])):
-            if train['AgeGroup'][x] == 'Unknown':
-                train['AgeGroup'][x] = age_title_mapping[train['Title'][x]]
+        # for x in range(len(train['AgeGroup'])):
+        #     if train['AgeGroup'][x] == 'Unknown':
+        #         train['AgeGroup'][x] = age_title_mapping[train[''][x]]
         
         age_mapping = {
             'Unknown': 0,
@@ -155,13 +155,21 @@ class MemberDBDataProcessing:
     def email_nominal(this):
         this.train['Email'] = ''
         for idx in range(len(this.train)):
-            this.train.loc[idx,'Email'] = str(this.train.loc[idx,'CustomerId']) + '@gmail.com'
+            if this.train.loc[idx, 'CustomerId'] == 0:
+                this.train.loc[idx, 'Email'] = 'admin@stockpsychic.com'
+            else:
+                this.train.loc[idx,'Email'] = str(this.train.loc[idx,'CustomerId']) + '@gmail.com'
         return this
     
     # 권한 추가 (모두 회원 권한)
     @staticmethod
     def role_nominal(this):
-        this.train['Role'] = 'ROLE_USER'
+        this.train['Role'] = ''
+        for idx in range(len(this.train)):
+            if this.train.loc[idx, 'CustomerId'] == 0:
+                this.train['Role'] = 'ROLE_ADMIN'
+            else:
+                this.train['Role'] = 'ROLE_USER'
         return this
 
     # 프로필 이미지 추가
@@ -187,12 +195,15 @@ class MemberModelingDataPreprocessing:
         this.train = members
         
         # 컬럼 삭제
+        this.train.drop(this.train.loc[this.train['CustomerId']==0].index, inplace=True)
+        print(this.train)
         this = self.drop_feature(this, 'RowNumber') # 열 번호 삭제
         this = self.drop_feature(this, 'Surname') # 이름 삭제
         # this = self.drop_feature(this, 'Email') # 이메일 삭제
         # this = self.drop_feature(this, 'Role') # 권한 삭제
         # this = self.drop_feature(this, 'Password') # 비밀번호 삭제
         # this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
+        
         
         # 데이터 정제
         this = self.geography_nominal(this)
@@ -306,9 +317,9 @@ class MemberModelingDataPreprocessing:
             7: 'Senior'
         }
 
-        for x in range(len(train['AgeGroup'])):
-            if train['AgeGroup'][x] == 'Unknown':
-                train['AgeGroup'][x] = age_title_mapping[train['Title'][x]]
+        # for x in range(len(train['AgeGroup'])):
+        #     if train['AgeGroup'][x] == 'Unknown':
+        #         train['AgeGroup'][x] = age_title_mapping[train[''][x]]
         
         age_mapping = {
             'Unknown': 0,

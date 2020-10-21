@@ -29,7 +29,7 @@ class BoardPro:
     def refine_data(data):
         # 컬럼명 변경
         data = data.rename({'제목': 'title', '내용': 'content', '작성일자': 'regdate'}, axis='columns')
-        data['email'] = 'admin@admin.com'
+        data['email'] = 'admin@stockpsychic.com'
         data['article_type'] = 'Notice'
         data = data.drop('url', axis=1)
 
