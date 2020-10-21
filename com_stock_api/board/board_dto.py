@@ -1,6 +1,21 @@
 from com_stock_api.ext.db import db
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine
+from com_stock_api.board.board_pro import BoardPro
 import datetime
 from com_stock_api.member.member_dto import MemberDto
+
+config = {
+    'user': 'root',
+    'password': 'root',
+    'host': '127.0.0.1',
+    'port': '3306',
+    'database': 'mariadb'
+}
+
+charset = {'utf8': 'utf8'}
+url = f'mysql+mysqlconnector://{config["user"]}:{config["password"]}@{config["host"]}:{config["port"]}/{config["database"]}?charset=utf8'
+engine = create_engine(url)
 
 class BoardDto(db.Model):
 
@@ -43,3 +58,13 @@ class BoardDto(db.Model):
     def delete(self):
         db.session.delete(self)
         db.commit()
+
+
+# service = BoardPro()
+# Session = sessionmaker(bind=engine)
+# s = Session()
+# df = service.process()
+# print(df.head())
+# s.bulk_insert_mappings(BoardDto, df.to_dict(orient="records"))
+# s.commit()
+# s.close()

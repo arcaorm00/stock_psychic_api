@@ -44,3 +44,27 @@ with app.app_context():
 @app.route('/api')
 def connect_test():
     return {'message': 'connect success'}
+# ===================== Member
+@app.route('/api/member/insert')
+def insert_member():
+    result = MemberApi.post()
+    print(result)
+    return result
+
+# ===================== Board
+@app.route('/api/boards/insert')
+def insert_article():
+    result = BoardApi.post()
+    return result
+
+@app.route('/api/boards/list')
+def list_articles():
+    boards = Boards()
+    boards_list = boards.get()
+    print(boards_list)
+    return boards_list
+
+@app.route('/api/boards/detail')
+def get_article(id):
+    board = BoardApi.get(id)
+    return board

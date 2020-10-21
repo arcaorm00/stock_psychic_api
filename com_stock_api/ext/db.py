@@ -4,12 +4,21 @@ from sqlalchemy.ext.declarative import declarative_base
 db = SQLAlchemy()
 Base = declarative_base()
 
+# config = {
+#     'user': 'stockpsychic',
+#     'password': 'stockpsychic',
+#     'host': 'stockpsychic.ceq7fgqi0yai.ap-northeast-2.rds.amazonaws.com',
+#     'port': '3306',
+#     'database': 'stockpsychic'
+# }
+
+
 config = {
-    'user': 'stockpsychic',
-    'password': 'stockpsychic',
-    'host': 'stockpsychic.ceq7fgqi0yai.ap-northeast-2.rds.amazonaws.com',
+    'user': 'root',
+    'password': 'root',
+    'host': '127.0.0.1',
     'port': '3306',
-    'database': 'stockpsychic'
+    'database': 'mariadb'
 }
 
 charset = {'utf8': 'utf8'}

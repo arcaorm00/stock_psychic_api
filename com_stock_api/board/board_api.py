@@ -15,7 +15,7 @@ class BoardApi(Resource):
         
     def post(self):
         data = self.parser.parse_args()
-        board = BoardDto(data['id'], data['email'], data['title'], data['content'], data['regdate'])
+        board = BoardDto(data['id'], data['email'], data['article_type'], data['title'], data['content'], data['regdate'])
         try:
             board.save()
         except:

@@ -1,6 +1,6 @@
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# import sys
+# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 basedir = os.path.abspath(os.path.dirname(__file__))
 from com_stock_api.utils.file_helper import FileReader
 import pandas as pd
@@ -28,9 +28,9 @@ Exited            서비스 탈퇴 여부
 class MemberDBDataProcessing:
 
     def __init__(self):
-        print(f'basedir: {basedir}')
+        # print(f'basedir: {basedir}')
         self.fileReader = FileReader()
-        self.datapath = os.path.join(basedir, 'data')
+        self.datapath = os.path.abspath('com_stock_api/member')
 
     def process(self, data):
         service = self
@@ -50,17 +50,26 @@ class MemberDBDataProcessing:
         this = service.role_nominal(this)
         # print(f'권한 추가 후: \n{this.train["Role"]}')
         this = service.set_profileimage(this)
-        self.datapath = os.path.join(basedir, 'saved_data')
-        this.train.to_csv(os.path.join(self.datapath, 'member_detail.csv'), index=False)
+        self.datapath = os.path.join(this.context, 'saved_data')
+        # this.train.to_csv(os.path.join(self.datapath, 'member_detail.csv'), index=False)
+
+        # 데이터베이스 속성명과 컬럼명 일치 작업
+        this = service.drop_feature(this, 'RowNumber')
+        this = service.drop_feature(this, 'CustomerId')
+        this = service.drop_feature(this, 'AgeGroup')
+        this.train = this.train.rename({'Surname': 'name', 'CreditScore': 'credit_score', 'Geography': 'geography', 
+        'Gender': 'gender', 'Age': 'age', 'Tenure': 'tenure', 'Balance': 'balance', 'NumOfProducts': 'stock_qty', 'HasCrCard': 'has_credit', 'IsActiveMember': 'is_active_member', 
+        'EstimatedSalary': 'estimated_salary', 'Password': 'password', 'Email': 'email', 'Role': 'role', 'Profile': 'profile'}, axis='columns')
+
         print(this.train)
-        return this
+        return this.train
 
     def new_model(self, payload) -> object:
         this = self.fileReader
-        this.context = self.datapath
+        this.context = os.path.join(self.datapath, 'data')
         this.fname = payload
         print(f'*****{this.context + this.fname}')
-        return pd.read_csv(os.path.join(self.datapath, this.fname))
+        return pd.read_csv(os.path.join(this.context, this.fname))
 
     @staticmethod
     def drop_feature(this, feature) -> object:
@@ -167,9 +176,9 @@ class MemberDBDataProcessing:
         this.train['Role'] = ''
         for idx in range(len(this.train)):
             if this.train.loc[idx, 'CustomerId'] == 0:
-                this.train['Role'] = 'ROLE_ADMIN'
+                this.train.loc[idx, 'Role'] = 'ROLE_ADMIN'
             else:
-                this.train['Role'] = 'ROLE_USER'
+                this.train.loc[idx, 'Role'] = 'ROLE_USER'
         return this
 
     # 프로필 이미지 추가
@@ -382,13 +391,14 @@ class MemberModelingDataPreprocessing:
 class MemberPro:
     def __init__(self):
         self.db_data_process = MemberDBDataProcessing()
-        self.modeling_data_process = MemberModelingDataPreprocessing()
+        # self.modeling_data_process = MemberModelingDataPreprocessing()
 
     def hook(self):
         ddp = self.db_data_process
-        ddp.process('member_dataset.csv')
-        mdp = self.modeling_data_process
-        mdp.hook_process()
+        database_df = ddp.process('member_dataset.csv')
+        # mdp = self.modeling_data_process
+        # mdp.hook_process()
+        return database_df
     
 
 if __name__ == '__main__':
