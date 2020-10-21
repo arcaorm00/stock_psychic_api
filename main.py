@@ -44,12 +44,25 @@ with app.app_context():
 @app.route('/api')
 def connect_test():
     return {'message': 'connect success'}
+
 # ===================== Member
 @app.route('/api/member/insert')
 def insert_member():
     result = MemberApi.post()
     print(result)
     return result
+
+@app.route('/app/members/list')
+def list_members():
+    members = Members()
+    members_list = members.get()
+    print(members_list)
+    return members_list
+
+@app.route('/app/member/get-by-email')
+def get_members_by_email(email):
+    member = MemberApi.get(email)
+    return member
 
 # ===================== Board
 @app.route('/api/boards/insert')
@@ -65,6 +78,19 @@ def list_articles():
     return boards_list
 
 @app.route('/api/boards/detail')
-def get_article(id):
+def get_article_by_id(id):
     board = BoardApi.get(id)
     return board
+
+# ===================== trading
+@app.route('/api/trading/insert')
+def insert_trading():
+    result = TradingApi.post()
+    return result
+
+@app.route('/api/trading/get-by-email')
+def get_tradings_by_email(email):
+    tradings = Tradings()
+    trading_list = tradings.get_by_email(email)
+    print(trading_list)
+    return trading_list
