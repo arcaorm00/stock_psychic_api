@@ -6,13 +6,13 @@ class StockDto(db.Model):
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
     
     id: int = db.Column(db.Integer, primary_key = True, index = True)
-    date : int = db.Column(db.DATETIME)
-    open : int = db.Column(db.VARCHAR(30))
-    close : int = db.Column(db.VARCHAR(30))
-    high : int = db.Column(db.VARCHAR(30))
-    low :int = db.Column(db.VARCHAR(30))
-    amount : int = db.Column(db.VARCHAR(30))
-    stock : str = db.Column(db.VARCHAR(30))
+    date : str = db.Column(db.DATETIME)
+    open : int = db.Column(db.String(30))
+    close : int = db.Column(db.String(30))
+    high : int = db.Column(db.String(30))
+    low :int = db.Column(db.String(30))
+    amount : int = db.Column(db.String(30))
+    stock : str = db.Column(db.String(30))
     
     def __init__(self,id,date, open, close, high, low, amount, stock):
         self.id = id

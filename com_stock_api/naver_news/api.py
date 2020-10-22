@@ -18,7 +18,7 @@ class News(Resource):
 
     def post(self):
         data = self.parset.parse_args()
-        news = NewsDto(data['datedate'],data['symbol'],data['headline'],data['neg'], data['pos'], data['neu'],data['keywords'],data['url'])
+        news = NewsDto(data['date'],data['headline'],data['neg'], data['pos'], data['neu'],data['keywords'],data['url'])
         try:
             news.save()
         except:

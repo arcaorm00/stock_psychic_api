@@ -8,7 +8,7 @@ class KospiDto(db.Model):
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
     
     id: int = db.Column(db.Integer, primary_key = True, index = True)
-    date : int = db.Column(db.DATETIME)
+    date : str = db.Column(db.DATETIME)
     stock :int = db.Column(db.VARCHAR(30))
     price : int = db.Column(db.VARCHAR(30))
 

@@ -8,11 +8,11 @@ class KoreaDto(db.Model):
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
     
     id: int = db.Column(db.Integer, primary_key = True, index = True)
-    date : int = db.Column(db.DATETIME)
-    seoul_cases :int = db.Column(db.VARCHAR(30))
-    seoul_death :int = db.Column(db.VARCHAR(30))
-    total_cases : int = db.Column(db.VARCHAR(30))
-    total_death : int = db.Column(db.VARCHAR(30))
+    date : str = db.Column(db.DATETIME)
+    seoul_cases :int = db.Column(db.String(30))
+    seoul_death :int = db.Column(db.String(30))
+    total_cases : int = db.Column(db.String(30))
+    total_death : int = db.Column(db.String(30))
     
     def __init__(self, id,date, seoul_cases, seoul_death, total_cases, total_death):
         self.date = date

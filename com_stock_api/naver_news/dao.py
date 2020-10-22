@@ -1,4 +1,5 @@
 from com_stock_api.ext.db import db
+from com_stock_api.naver_news.service import NewsService
 
 class NewsDao():
 
@@ -19,4 +20,4 @@ class NewsDao():
 
 
 
-  
+
