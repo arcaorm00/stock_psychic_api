@@ -70,3 +70,5 @@ class YHNewsScrap:
 if __name__=='__main__':
     news_pro = YHNewsScrap('AAPL')
     news_pro.hook()
+
+  

@@ -11,6 +11,8 @@ from com_stock_api.kospi_pred.api import Kospi,Kospis
 from com_stock_api.naver_finance.api import Stock,Stocks
 from com_stock_api.naver_news.api import News,News_
 
+from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
+
 def initialize_routes(api):
     api.add_resource(Members, '/api/members')
     api.add_resource(MemberApi, '/api/member/get-by-email/<string:email>')
@@ -33,3 +35,5 @@ def initialize_routes(api):
     api.add_resource(Stocks,'/api/stocks')
     api.add_resource(News,'/api/news/<string:id>')
     api.add_resource(News_,'/api/news_')
+
+    api.add_resource(Prediction, '/api/prediction')

@@ -1,6 +1,7 @@
 from com_stock_api.ext.db import db
+from com_stock_api.trading.trading_dto import TradingDto
 
-class TradingDao():
+class TradingDao(TradingDto):
 
     @classmethod
     def find_all(cls):

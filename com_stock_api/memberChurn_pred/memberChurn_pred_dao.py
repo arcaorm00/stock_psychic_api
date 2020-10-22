@@ -1,6 +1,7 @@
 from com_stock_api.ext.db import db
+from com_stock_api.memberChurn_pred.memberChurn_pred_dto import MemberChurnPredDto
 
-class MemberChurnPredDao:
+class MemberChurnPredDao(MemberChurnPredDto):
 
     @classmethod
     def find_all(cls):

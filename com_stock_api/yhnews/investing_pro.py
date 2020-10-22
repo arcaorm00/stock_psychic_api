@@ -2,13 +2,12 @@ from bs4 import BeautifulSoup as bs
 from urllib.request import Request, urlopen
 import requests
 import pandas as pd
-# import v3io_frames as v3f
 from unicodedata import normalize
 from datetime import datetime, date
 import re
 import os
-import json
-# from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from http.client import IncompleteRead
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 class InverstingPro:
@@ -17,16 +16,28 @@ class InverstingPro:
     ticker_str : str
     ticker : str
     n : int
+    # Temporaily set up the page number for the time sake
     AAPL = 240
     TSLA = 150
+    START_DATE = datetime.strptime('2020-01-01', '%Y-%m-%d')
+    END_DATE = datetime.strptime('2020-06-30', '%Y-%m-%d')
+  
     def __init__(self):
-        ...
+        ticker = input(print("Please enter a stock symbol: "))
+        if (self.tickers[ticker]) != None:
+            self.ticker_str = self.tickers.get(ticker)
+            self.ticker = ticker
+            self.n = self.AAPL if self.ticker == 'AAPL' else self.TSLA
+            self.processed_info = []
+
+        else:
+            print(KeyError)
 
     def __init__(self, ticker):
         if (self.tickers[ticker]) != None:
             self.ticker_str = self.tickers.get(ticker)
             self.ticker = ticker
-            self.n = self.num = self.AAPL if self.ticker == 'AAPL' else self.TSLA
+            self.n = self.AAPL if self.ticker == 'AAPL' else self.TSLA
             self.processed_info = []
         else:
             print(KeyError)
@@ -34,38 +45,58 @@ class InverstingPro:
     def hook(self):
 
         news_pages  =[]
-        news_page = self.get_stock_news_pages(self.ticker_str, self.n)
-        if (self.dates_checker(news_page) and abs(self.num-self.n) <=100): #Only want to see 100 pages for 6 months long
-            news_pages.append(news_page)
-            n-=1
+        while(self.n>1):
+            news_page = self.get_stock_news_pages(self.ticker_str, self.n)
+            # Get all the pages within the date range (Possible to include other dates \
+            # in first and last news page due to multiple articles on one page)
+            if (self.dates_checker(news_page)):
+                print("Getting ",self.n,"th news page...")
+                news_pages.append(news_page)
+            else:
+                #Device to take START_DATE pages and to stop bringing pages when it reaches to the END_DATE
+                if (len(news_pages) > 0):
+                    break
+            self.n-=1
 
         article_pages=[]
-        for p in news_pages:
+        i = 1
+        for index, p in enumerate(news_pages):
             links = self.get_internal_article_links(p)
-            for l in links:
+            print('Processing ... {} / {}'.format(i,len(news_pages) ))
+
+            for l in reversed(links):
                 page = self.get_article_page(l)
+                if (index ==0 or index == len(news_page) -1):
+                    t= datetime.strptime(self.get_publish_time(page), '%Y-%m-%d')
+                    if (t > self.END_DATE or t < self.START_DATE):
+                        continue
+                
                 text = self.extract_text(page)
                 headline = self.get_headline(page)
                 date = self.get_publish_time(page)
                 self.processed_info.append([l, date, headline, text])
+     
+            i+=1
+
+        # Add a ticker in the list 
+        for i in self.processed_info:
+            i.insert(1, self.ticker)
+
+        self.save_news(self.processed_info)
+        self.get_sentiment_analysis(self.processed_info)
+
+        print("++ DONE ++")
+
         
-        print(self.processed_info)
 
-
-        # date checker return value : 0 = All the articles are out of range.
-        #                           : 1 = This page is good to read all (ex. 2020-10-30)
-
-
-        # links = self.get_internal_article_links(news_pages)
-        # for link in links:
-        #     page = self.get_article_page(link)
-        #     text = self.extract_text(page)
-        #     headline = self.get_headline(page)
-        #     date = self.get_publish_time(page)
-        #     info = [self.ticker, date, headline, text, link]
-        #     self.processed_info.append(info)
-        # return self.processed_info
-        
+    def save_news(self, news_list):
+        col = ['Date', 'Ticker', 'Link', 'Headline', 'Content']
+        df = pd.DataFrame(news_list, columns=col)
+        path = os.path.abspath(__file__+"/.."+"/data/")
+        file_name = self.ticker + '_news.csv'
+        output_file = os.path.join(path,file_name)
+        df.to_csv(output_file)
+        print("Completed saving ", file_name)
 
 
     def get_stock_news_pages(self, stock_string, n):
@@ -79,20 +110,19 @@ class InverstingPro:
     def dates_checker (self, page):
 
         tags = page.find_all('span', attrs={'class' : 'date'})[:10]
-        published_dates = [i.text.strip().replace("-", '').replace('\xa0','') for i in tags]
-        published_dates = [datetime.strptime(i, '%b %d, %Y') for i in published_dates]
-        # strftime('%Y-%m-%d')
+        dates = [i.text.strip().replace("-", '').replace('\xa0','') for i in tags]
+        published_dates=[]
+        for i in dates:
+            try:
+                published_dates.append(datetime.strptime(i, '%b %d, %Y'))
+            except ValueError:
+                pass
 
-
-        for t in published_dates:
-            if (datetime(2020,1,1) <= t <= datetime(2020, 6, 30)):
-                continue
-            else:
-                published_dates.remove(t)
-            
-        
-        return False if len(published_dates) == 0 else True
-        
+        published_dates[:] = [date for date in published_dates if (self.START_DATE <= date <= self.END_DATE)]
+        return False if (len(published_dates) == 0) else True
+    
+    def date_checker (self, article):
+        ...
         
 
     def get_headline(self, page):
@@ -107,7 +137,13 @@ class InverstingPro:
     def get_article_page(self, article_link):
         request = Request(article_link, headers={"User-Agent": "Mozilla/5.0"})
         content = urlopen(request).read()
-        return bs(content, 'html.parser')
+        
+        try:
+            page= bs(content, 'lxml')
+        except IncompleteRead as e:
+            print("Incomplete Read error occurs")
+            page = e.partial
+        return page
 
     def clean_paragraph(self, paragraph):
         paragraph = re.sub(r'\(http\S+', '', paragraph)
@@ -130,24 +166,29 @@ class InverstingPro:
         publish_date = publish_date[:10]
         return publish_date
 
-    def get_score(self, paragraph_scores):
-        return sum([score - 1 for score in paragraph_scores]) / len(paragraph_scores)  
+    def get_sentiment_analysis(self, news_list):
 
-    def get_article_scores(self, context, articles, endpoint):
-        scores = [] 
-        for i, article in enumerate(articles):
-            context.logger.info(f'getting score for article {i + 1}\\{len(articles)}')
-            event_data = {'instances': article.split('\n')}
-            resp = requests.put(endpoint+'/bert_classifier_v1/predict', json=json.dumps(event_data))
-            scores.append(get_score(json.loads(resp.text)))
-        return scores
+        vader = SentimentIntensityAnalyzer()
+        col = ['Date', 'Ticker', 'Link', 'Headline', 'Content']
+        news_with_scores = pd.DataFrame(news_list, columns=col)
+        scores = news_with_scores['Content'].apply(vader.polarity_scores).tolist()
+        
+        scores_df = pd.DataFrame(scores)
+        news_with_scores = news_with_scores.join(scores_df, rsuffix='_right')
+        news_with_scores['Date'] = pd.to_datetime(news_with_scores.Date).dt.date
+        news_with_scores.drop('Content',axis=1,inplace=True)
 
+        path = os.path.abspath(__file__+"/.."+"/data/")
+        file_name = self.ticker + '_sentiment.csv'
+        output_file = os.path.join(path,file_name)
+        news_with_scores.to_csv(output_file)
+        print("Completed saving ", file_name)
 
-investing = InverstingPro('TSLA')
+        print(news_with_scores.head())
 
+if __name__=='__main__':
+    tesla = InverstingPro('TSLA')
+    apple = InverstingPro('AAPL')
+    tesla.hook()
+    apple.hook()
 
-news_page = investing.get_stock_news_pages(investing.ticker_str, investing.n)
-a = investing.dates_checker(news_page)
-
-# for i in range(len(links)):
-#     print("Time: ", time[i], " pages: " , pages[i], " links: ", links[i])
