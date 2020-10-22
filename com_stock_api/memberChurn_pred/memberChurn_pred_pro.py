@@ -141,9 +141,9 @@ class MemberChurnPred:
         refined_data = pd.DataFrame(refined_dict)
         print(refined_data)
         
-        context = os.path.join(os.path.join(baseurl, 'memberChurn_pred'), 'saved_data')
-        refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'), index=False)
-        print('file saved')
+        # context = os.path.join(os.path.join(baseurl, 'memberChurn_pred'), 'saved_data')
+        # refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'), index=False)
+        # print('file saved')
 
 if __name__ == '__main__':
     training = MemberChurnPred()

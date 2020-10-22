@@ -32,7 +32,8 @@ class MemberApi(Resource):
         return member.json(), 201
     
     def get(self, email):
-        member = MemberDao.find_by_email(email)
+        member_dao = MemberDao()
+        member = member_dao.find_by_email(email)
         if member:
             return member.json()
         return {'message': 'Member not found'}, 404

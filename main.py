@@ -63,7 +63,8 @@ def list_members():
 def get_members_by_email():
     email = request.get_json()['email']
     print(email)
-    member = MemberApi.get(email)
+    member_api = MemberApi()
+    member = member_api.get(email)
     return member
 
 # ===================== Board
