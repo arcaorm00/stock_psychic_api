@@ -1,10 +1,11 @@
 from com_stock_api.ext.db import db
+from com_stock_api.member.member_dto import MemberDto
 
 class MemberDao():
 
     @classmethod
     def find_all(cls):
-        return cls.query.all()
+        return MemberDto.query.all()
 
     @classmethod
     def find_by_email(cls, email):

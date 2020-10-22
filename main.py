@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api
 from com_stock_api.ext.db import url, db
 from com_stock_api.ext.routes import initialize_routes
@@ -32,9 +32,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 api = Api(app)
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# @app.before_first_request
+# def create_tables():
+#     db.create_all()
 
 initialize_routes(api)
 
@@ -46,21 +46,23 @@ def connect_test():
     return {'message': 'connect success'}
 
 # ===================== Member
-@app.route('/api/member/insert')
+@app.route('/api/member/insert', methods=['POST'])
 def insert_member():
     result = MemberApi.post()
     print(result)
     return result
 
-@app.route('/app/members/list')
+@app.route('/api/members/list')
 def list_members():
     members = Members()
     members_list = members.get()
     print(members_list)
     return members_list
 
-@app.route('/app/member/get-by-email')
-def get_members_by_email(email):
+@app.route('/api/member/get-by-email', methods=['POST'])
+def get_members_by_email():
+    email = request.get_json()['email']
+    print(email)
     member = MemberApi.get(email)
     return member
 

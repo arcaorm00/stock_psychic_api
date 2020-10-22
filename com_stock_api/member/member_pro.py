@@ -396,8 +396,8 @@ class MemberPro:
     def hook(self):
         ddp = self.db_data_process
         database_df = ddp.process('member_dataset.csv')
-        # mdp = self.modeling_data_process
-        # mdp.hook_process()
+        mdp = self.modeling_data_process
+        mdp.hook_process()
         return database_df
     
 

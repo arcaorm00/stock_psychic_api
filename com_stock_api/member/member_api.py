@@ -42,6 +42,7 @@ class MemberApi(Resource):
         member = MemberDao.find_by_email(email)
 
         # 이거 뭘 하는거지?
+        member.password = data['password']
         member.gender = data['gender']
         member.age = data['age']
         member.save()
