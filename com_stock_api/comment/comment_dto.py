@@ -42,14 +42,15 @@ class CommentDto(db.Model):
             'comment_step': self.comment_step
         }
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
+class CommentVo:
+    id: int = 0
+    board_id: int = 0
+    email: str = ''
+    comment: str = ''
+    regdate: datetime = datetime.datetime.now()
+    comment_ref: int = 0
+    comment_level: int = 0
+    comment_step: int = 0
 
 # ref, level, step은 대댓글 기능을 위함
 

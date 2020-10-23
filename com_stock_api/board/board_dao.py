@@ -1,15 +1,16 @@
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.board.board_dto import BoardDto
 from com_stock_api.board.board_pro import BoardPro
+import pandas as pd
+import json
 
 class BoardDao(BoardDto):
-    
-    def __init__(self):
-        ...
 
     @classmethod
     def find_all(cls):
-        return cls.query.all()
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_by_id(cls, id):

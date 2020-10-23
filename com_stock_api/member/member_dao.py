@@ -1,6 +1,8 @@
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.member.member_dto import MemberDto
 from com_stock_api.member.member_pro import MemberPro
+import pandas as pd
+import json
 
 class MemberDao(MemberDto):
 
@@ -9,19 +11,32 @@ class MemberDao(MemberDto):
 
     @classmethod
     def find_all(cls):
-        return cls.query.all()
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_email(cls, email):
-        return cls.query.filter_by(email == email).first()
+    def find_by_email(cls, member):
+        sql = cls.query.filter(cls.email.like(member.email))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_name(cls, name):
-        return cls.query.filter_by(name == name).all()
-
+    def find_by_name(cls, member):
+        sql = cls.query.filter(cls.name.like(member.name))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
+    
+    @classmethod
     def login(cls, member):
-        return cls.query.filter(cls.email == member.email)\
-        .filter(cls.password == member.password).first()
+        sql = cls.query.filter(cls.email.like(member.email))\
+            .filter(cls.password.like(member.password))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        print('=======================================')
+        print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
 
     @staticmethod
     def save(member):

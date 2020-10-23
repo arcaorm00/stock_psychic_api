@@ -1,5 +1,7 @@
 from com_stock_api.ext.db import db
 from com_stock_api.comment.comment_dto import CommentDto
+import pandas as pd
+import json
 
 class CommentDao(CommentDto):
 
@@ -8,15 +10,23 @@ class CommentDao(CommentDto):
 
     @classmethod
     def find_all(cls):
-        return cls.query.all()
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_id(cls, id):
-        return cls.query.filter_by(id == id).first()
+    def find_by_id(cls, comment):
+        sql = cls.query.filter(cls.id.like(comment.id))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_boardid(cls, board_id):
-        return cls.query.filter_by(board_id == board_id).all()
+    def find_by_boardid(cls, comment):
+        sql = cls.query.filter(cls.board_id.like(comment.board_id))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
     
     @staticmethod
     def save(comment):

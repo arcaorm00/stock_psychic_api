@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from com_stock_api.member.member_pro import MemberPro
 
-config = {
-    'user': 'root',
-    'password': 'root',
-    'host': '127.0.0.1',
-    'port': '3306',
-    'database': 'stockdb'
-}
+# config = {
+#     'user': 'root',
+#     'password': 'root',
+#     'host': '127.0.0.1',
+#     'port': '3306',
+#     'database': 'stockdb'
+# }
 
-charset = {'utf8': 'utf8'}
-url = f'mysql+mysqlconnector://{config["user"]}:{config["password"]}@{config["host"]}:{config["port"]}/{config["database"]}?charset=utf8'
-engine = create_engine(url)
+# charset = {'utf8': 'utf8'}
+# url = f'mysql+mysqlconnector://{config["user"]}:{config["password"]}@{config["host"]}:{config["port"]}/{config["database"]}?charset=utf8'
+# engine = create_engine(url)
 
 class MemberDto(db.Model):
 
@@ -82,14 +82,22 @@ class MemberDto(db.Model):
             # 'exited': self.exited
         }
 
-    def save(self):
-        db.session.add(self)
-        db.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.commit()
-
+class MemberVo:
+    email: str = ''
+    password: str = ''
+    name: str = ''
+    profile: str = ''
+    geography: str = ''
+    gender: str = ''
+    age: int = 0
+    tenure: int = 0
+    stock_qty: int = 0
+    balance: float = 0.0
+    has_credit: int = 0
+    credit_score: int = 0
+    is_active_member: int = 1
+    estimated_salary: float = 0.0
+    role: str = 'ROLE_USER'
 
 # service = MemberPro()
 # Session = sessionmaker(bind=engine)

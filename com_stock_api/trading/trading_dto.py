@@ -14,7 +14,7 @@ class TradingDto(db.Model):
     kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(StockDto.id))
     nasdaq_stock_id: int = db.Column(db.Integer, db.ForeignKey(YHFinanceDto.id))
     stock_qty: int = db.Column(db.Integer, nullable=False)
-    price: float = db.Column(db.Integer, nullable=False)
+    price: float = db.Column(db.float, nullable=False)
     trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
 
     def __init__(self, id, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
@@ -41,10 +41,11 @@ class TradingDto(db.Model):
             'trading_date': self.trading_date
         }
 
-    def save(self):
-        db.session.add(self)
-        db.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.commit()
+class TradingVo:
+    id: int = 0
+    email: str = ''
+    kospi_stock_id: int = 0
+    nasdaq_stock_id: int = 0
+    stock_qty: int = 0
+    price: float = 0.0
+    trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())

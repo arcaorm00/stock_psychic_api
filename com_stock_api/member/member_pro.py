@@ -373,7 +373,7 @@ class MemberModelingDataPreprocessing:
 
     # ---------------------- 파일 저장 ---------------------- 
     def save_preprocessed_data(self, this):
-        this.context = os.path.join(basedir, 'saved_data')
+        this.context = os.path.join(os.path.join(os.path.abspath(basedir), 'memberChurn_pred'), 'data')
         this.train.to_csv(os.path.join(this.context, 'member_refined.csv'))
         print('file saved')
 

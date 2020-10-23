@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-baseurl = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+baseurl = os.path.dirname(os.path.abspath(__file__))
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -41,7 +41,7 @@ class MemberChurnPred:
         return this['Exited']
 
     def get_data(self):
-        self.reader.context = os.path.join(baseurl, os.path.join('member', 'saved_data'))
+        self.reader.context = os.path.join(baseurl, 'data')
         self.reader.fname = 'member_refined.csv'
         data = self.reader.csv_to_dframe()
         data = data.to_numpy()

@@ -59,6 +59,14 @@ class BoardDto(db.Model):
         db.session.delete(self)
         db.commit()
 
+class BoardVo:
+    id: int = 0
+    email: str = ''
+    article_type: str = ''
+    title: str = ''
+    content: str = ''
+    regdate: datetime = datetime.datetime.now()
+
 
 # service = BoardPro()
 # Session = sessionmaker(bind=engine)

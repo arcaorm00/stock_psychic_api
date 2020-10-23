@@ -3,6 +3,7 @@ from flask_restful import Api
 from com_stock_api.ext.db import url, db
 from com_stock_api.ext.routes import initialize_routes
 
+# from com_stock_api.member import member
 from com_stock_api.member.member_api import MemberApi, Members
 from com_stock_api.board.board_api import BoardApi, Boards
 from com_stock_api.comment.comment_api import CommentApi, Comments
@@ -24,6 +25,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+# app.register_blueprint(member)
 
 print('====== url ======')
 print(url)
@@ -74,8 +77,7 @@ def insert_article():
 
 @app.route('/api/boards/list')
 def list_articles():
-    boards = Boards()
-    boards_list = boards.get()
+    boards_list = Boards.get()
     print(boards_list)
     return boards_list
 
@@ -92,7 +94,6 @@ def insert_trading():
 
 @app.route('/api/trading/get-by-email')
 def get_tradings_by_email(email):
-    tradings = Tradings()
-    trading_list = tradings.get_by_email(email)
+    trading_list = Tradings.get_by_email(email)
     print(trading_list)
     return trading_list
