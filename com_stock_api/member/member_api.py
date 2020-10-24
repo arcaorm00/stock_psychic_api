@@ -1,6 +1,9 @@
+from typing import List
+from flask import request, jsonify
 from flask_restful import Resource, reqparse
 from com_stock_api.member.member_dao import MemberDao
 from com_stock_api.member.member_dto import MemberDto
+import json
 
 class MemberApi(Resource):
     def __init__(self):
@@ -22,15 +25,18 @@ class MemberApi(Resource):
         parser.add_argument('role', type=str, required=True, help='This field cannot be left blank')
         parser.add_argument('exited', type=int, required=True, help='This field cannot be left blank')
 
-    def post(self):
-        data = self.parser.parse_args()
-        member = MemberDto(data['email'], data['password'], data['name'], data['profile'], data['geography'], data['gender'], data['age'], data['tenure'], data['stock_qty'], data['balance'], data['has_credit'], data['credit_score'], data['is_active_member'], data['estimated_salary'], data['role'], data['exited'])
-        try:
-            member.save()
-        except:
-            return {'message': 'An error occured inserting the members'}, 500
-        return member.json(), 201
-    
+    @staticmethod
+    def post():
+        args = parser.parse_args()
+        print(f'Member{args["id"]} added')
+        params = json.loads(request.get_data(), encoding='utf-8')
+        if len(params) == 0:
+            return 'No parameter'
+        
+        params_str = ''
+        for key in params.key():
+            params_str += 'key: {}, value: {}\n' .format(key, params[key])
+        return {'code': 0, 'message': 'SUCCESS'}, 200    
     def get(self, email):
         member = MemberDao.find_by_email(email)
         if member:
