@@ -81,8 +81,11 @@ class Auth(Resource):
 class Access(Resource):
 
     def post(self):
+        print('=============== member_api.py / Access')
         args = parser.parse_args()
+        print(f'args: {args}')
         member = MemberVo()
+        print('=============== after Vo')
         member.email = args.email
         member.password = args.password
         print(f'email: {member.email}')

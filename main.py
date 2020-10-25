@@ -30,8 +30,6 @@ CORS(app)
 app.register_blueprint(member)
 app.register_blueprint(board)
 
-# app.register_blueprint(member)
-
 print('====== url ======')
 print(url)
 

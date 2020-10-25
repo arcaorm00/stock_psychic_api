@@ -8,12 +8,11 @@ members = Blueprint('members', __name__, url_prefix='/api/members')
 auth = Blueprint('auth', __name__, url_prefix='/api/auth')
 access = Blueprint('access', __name__, url_prefix='/api/access')
 
+print('=============== member / __init__.py')
 api = Api(member)
 api = Api(members)
 api = Api(auth)
-print('====== 3 ======')
 api = Api(access)
-print('====== 4 ======')
 
 @member.errorhandler(500)
 def server_error(e):
