@@ -1,4 +1,4 @@
-from com_stock_api.member.member_api import MemberApi, Members
+from com_stock_api.member.member_api import Member, Members
 from com_stock_api.board.board_api import BoardApi, Boards
 from com_stock_api.comment.comment_api import CommentApi, Comments
 from com_stock_api.trading.trading_api import TradingApi, Tradings
@@ -15,7 +15,7 @@ from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
 
 def initialize_routes(api):
     api.add_resource(Members, '/api/members')
-    api.add_resource(MemberApi, '/api/member/get-by-email/<string:email>')
+    api.add_resource(Member, '/api/member/get-by-email/<string:email>')
     api.add_resource(Boards, '/api/boards')
     api.add_resource(BoardApi, '/api/board/<string:id>')
     api.add_resource(Comments, '/api/comments')

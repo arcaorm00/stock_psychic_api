@@ -4,7 +4,7 @@ from com_stock_api.ext.db import url, db
 from com_stock_api.ext.routes import initialize_routes
 
 # from com_stock_api.member import member
-from com_stock_api.member.member_api import MemberApi, Members
+from com_stock_api.member.member_api import Member, Members
 from com_stock_api.board.board_api import BoardApi, Boards
 from com_stock_api.comment.comment_api import CommentApi, Comments
 from com_stock_api.trading.trading_api import TradingApi, Tradings
@@ -51,7 +51,7 @@ def connect_test():
 # ===================== Member
 @app.route('/api/member/insert', methods=['POST'])
 def insert_member():
-    result = MemberApi.post()
+    result = Member.post()
     print(result)
     return result
 
@@ -66,7 +66,7 @@ def list_members():
 def get_members_by_email():
     email = request.get_json()['email']
     print(email)
-    member = MemberApi.get(email)
+    member = Member.get(email)
     return member
 
 # ===================== Board
