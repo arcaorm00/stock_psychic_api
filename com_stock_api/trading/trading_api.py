@@ -3,7 +3,7 @@ from flask_restful import Resource, reqparse
 from com_stock_api.trading.trading_dao import TradingDao
 from com_stock_api.trading.trading_dto import TradingDto
 
-class TradingApi(Resource):
+class Trading(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')

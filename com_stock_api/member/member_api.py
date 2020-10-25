@@ -2,7 +2,7 @@ from typing import List
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
 from com_stock_api.member.member_dao import MemberDao
-from com_stock_api.member.member_dto import MemberDto
+from com_stock_api.member.member_dto import MemberDto, MemberVo
 import json
 
 parser = reqparse.RequestParser()
@@ -60,5 +60,32 @@ class Member(Resource):
         return {'code': 0, 'message': 'SUCCESS'}, 200
 
 class Members(Resource):
+
+    def post(self):
+        m_dao = MemberDao()
+        m_dao.insert_many('members')
+
     def get(self):
-        return {'members': list(map(lambda member: member.json(), MemberDao.find_all()))}
+        data = MemberDao.find_all()
+        return data, 200
+    
+class Auth(Resource):
+
+    def post(self):
+        body = request.get_json()
+        member = MemberDto(**body)
+        MemberDao.save(member)
+        email = member.email
+        return {'email': str(email)}, 200
+    
+class Access(Resource):
+
+    def post(self):
+        args = parser.parse_args()
+        member = MemberVo()
+        member.email = args.email
+        member.password = args.password
+        print(f'email: {member.email}')
+        print(f'password: {member.password}')
+        data = MemberDao.login(member)
+        return data[0], 200

@@ -3,7 +3,7 @@ from com_stock_api.comment.comment_dao import CommentDao
 from com_stock_api.comment.comment_dto import CommentDto
 import datetime
 
-class CommentApi(Resource):
+class Comment(Resource):
     def __init__(self):
         parser = reqparse.RequestParser()
         parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')

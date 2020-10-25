@@ -2,7 +2,7 @@ from flask_restful import Resource, reqparse
 from com_stock_api.memberChurn_pred.memberChurn_pred_dto import MemberChurnPredDto
 from com_stock_api.memberChurn_pred.memberChurn_pred_dao import MemberChurnPredDao
 
-class MemberChurnPredApi(Resource):
+class MemberChurnPred(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()

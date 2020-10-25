@@ -3,7 +3,7 @@ from flask_restful import Resource, reqparse
 from com_stock_api.recommend_stock.recommend_stock_dao import RecommendStockDao
 from com_stock_api.recommend_stock.recommend_stock_dto import RecommendStockDto
 
-class RecommendStockApi(Resource):
+class RecommendStock(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()
