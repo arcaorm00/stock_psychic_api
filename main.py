@@ -65,12 +65,12 @@ def connect_test():
 #     print(members_list)
 #     return members_list
 
-# @app.route('/api/member/get-by-email', methods=['POST'])
-# def get_members_by_email():
-#     email = request.get_json()['email']
-#     print(email)
-#     member = Member.get(email)
-#     return member
+@app.route('/api/member', methods=['POST'])
+def get_members_by_email():
+    email = request.get_json()['email']
+    print(email)
+    member = Member.get(email)
+    return member
 
 # ===================== Board
 # @app.route('/api/boards/insert')
