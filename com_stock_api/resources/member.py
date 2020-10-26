@@ -625,9 +625,11 @@ class Member(Resource):
     def get(email):
         try:
             member = MemberDao.find_by_email(email)
+            print(f'member: {member}')
             if member:
-                return member.json()
+                return member
         except Exception as e:
+            print(e)
             return {'message': 'Member not found'}, 404
     
     @staticmethod
