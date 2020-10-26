@@ -1,5 +1,20 @@
 from com_stock_api.ext.db import db
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine
 from com_stock_api.member.member_dto import MemberDto
+from com_stock_api.memberChurn_pred.memberChurn_pred_pro import MemberChurnPred
+
+# config = {
+#     'user': 'root',
+#     'password': 'root',
+#     'host': '127.0.0.1',
+#     'port': '3306',
+#     'database': 'stockdb'
+# }
+
+# charset = {'utf8': 'utf8'}
+# url = f'mysql+mysqlconnector://{config["user"]}:{config["password"]}@{config["host"]}:{config["port"]}/{config["database"]}?charset=utf8'
+# engine = create_engine(url)
 
 class MemberChurnPredDto(db.Model):
     
@@ -26,3 +41,12 @@ class MemberChurnPredVo:
     id: int = 0
     email: str = ''
     probability_churn: float = 0.0
+
+# service = MemberChurnPred()
+# Session = sessionmaker(bind=engine)
+# s = Session()
+# df = service.hook()
+# print(df.head())
+# s.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
+# s.commit()
+# s.close()

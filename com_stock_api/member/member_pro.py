@@ -38,7 +38,7 @@ class MemberDBDataProcessing:
         this.context = self.datapath
         this.train = service.new_model(data)
         # print(f'feature 드롭 전 변수: \n{this.train.columns}')
-        this = service.drop_feature(this, 'Exited')
+        # this = service.drop_feature(this, 'Exited')
         this = service.age_ordinal(this)
         # print(f'나이 정제 후: \n{this.train.head()}')
         this = service.estimatedSalary_ordinal(this)
@@ -50,13 +50,14 @@ class MemberDBDataProcessing:
         this = service.role_nominal(this)
         # print(f'권한 추가 후: \n{this.train["Role"]}')
         this = service.set_profileimage(this)
-        self.datapath = os.path.join(this.context, 'saved_data')
-        # this.train.to_csv(os.path.join(self.datapath, 'member_detail.csv'), index=False)
+        self.datapath = os.path.join(self.datapath, 'saved_data')
+        this.train.to_csv(os.path.join(self.datapath, 'member_detail.csv'), index=False)
 
         # 데이터베이스 속성명과 컬럼명 일치 작업
         this = service.drop_feature(this, 'RowNumber')
         this = service.drop_feature(this, 'CustomerId')
         this = service.drop_feature(this, 'AgeGroup')
+        this = service.drop_feature(this, 'Exited')
         this.train = this.train.rename({'Surname': 'name', 'CreditScore': 'credit_score', 'Geography': 'geography', 
         'Gender': 'gender', 'Age': 'age', 'Tenure': 'tenure', 'Balance': 'balance', 'NumOfProducts': 'stock_qty', 'HasCrCard': 'has_credit', 'IsActiveMember': 'is_active_member', 
         'EstimatedSalary': 'estimated_salary', 'Password': 'password', 'Email': 'email', 'Role': 'role', 'Profile': 'profile'}, axis='columns')
@@ -197,9 +198,9 @@ class MemberModelingDataPreprocessing:
 
     def hook_process(self):
         this = self.filereader
-        this.context = os.path.join(basedir, 'data')
+        this.context = os.path.join(basedir, 'saved_data')
         # 데이터 정제 전 database data
-        this.fname = 'member_dataset.csv'
+        this.fname = 'member_detail.csv'
         members = this.csv_to_dframe()
         this.train = members
         
@@ -209,9 +210,9 @@ class MemberModelingDataPreprocessing:
         this = self.drop_feature(this, 'RowNumber') # 열 번호 삭제
         this = self.drop_feature(this, 'Surname') # 이름 삭제
         # this = self.drop_feature(this, 'Email') # 이메일 삭제
-        # this = self.drop_feature(this, 'Role') # 권한 삭제
-        # this = self.drop_feature(this, 'Password') # 비밀번호 삭제
-        # this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
+        this = self.drop_feature(this, 'Role') # 권한 삭제
+        this = self.drop_feature(this, 'Password') # 비밀번호 삭제
+        this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
         
         
         # 데이터 정제
@@ -224,7 +225,7 @@ class MemberModelingDataPreprocessing:
         this = self.estimatedSalary_ordinal(this)
 
         # 고객의 서비스 이탈과 각 칼럼간의 상관계수
-        self.correlation_member_secession(this.train)
+        # self.correlation_member_secession(this.train)
 
         # label 컬럼 재배치
         this = self.columns_relocation(this)
@@ -373,7 +374,7 @@ class MemberModelingDataPreprocessing:
 
     # ---------------------- 파일 저장 ---------------------- 
     def save_preprocessed_data(self, this):
-        this.context = os.path.join(os.path.join(os.path.abspath(basedir), 'memberChurn_pred'), 'data')
+        this.context = os.path.join(os.path.join(os.path.dirname(basedir), 'memberChurn_pred'), 'data')
         this.train.to_csv(os.path.join(this.context, 'member_refined.csv'))
         print('file saved')
 
@@ -381,9 +382,12 @@ class MemberModelingDataPreprocessing:
     def columns_relocation(self, this):
         cols = this.train.columns.tolist()
         # ['CustomerId', 'CreditScore', ... , 'EstimatedSalary', 'Exited', 'AgeGroup']
+        # cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
+        cols =  (cols[:-3] + cols[-1:]) + cols[-3:-1]
         cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
         # ['CustomerId', 'CreditScore', ... , 'EstimatedSalary', 'AgeGroup', 'Exited']
         this.train = this.train[cols]
+        print(this.train)
         return this
 
 
@@ -391,7 +395,7 @@ class MemberModelingDataPreprocessing:
 class MemberPro:
     def __init__(self):
         self.db_data_process = MemberDBDataProcessing()
-        # self.modeling_data_process = MemberModelingDataPreprocessing()
+        self.modeling_data_process = MemberModelingDataPreprocessing()
 
     def hook(self):
         ddp = self.db_data_process

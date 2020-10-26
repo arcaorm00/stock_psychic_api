@@ -1,7 +1,7 @@
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-baseurl = os.path.dirname(os.path.abspath(__file__))
+# import sys
+# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+baseurl = os.path.abspath(os.path.dirname(__file__))
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -32,7 +32,11 @@ class MemberChurnPred:
         self.train_model()
         self.eval_model()
         self.debug_model()
-        self.get_prob()
+        refined_data = self.get_prob()
+        refined_data = refined_data.rename({'Email': 'email', 'Prob_churn': 'probability_churn'}, axis='columns')
+
+        return refined_data
+
 
     def create_train(self, this):
         return this.drop('Exited', axis=1)
@@ -44,6 +48,9 @@ class MemberChurnPred:
         self.reader.context = os.path.join(baseurl, 'data')
         self.reader.fname = 'member_refined.csv'
         data = self.reader.csv_to_dframe()
+        emails = data['Email']
+        self.email_list = emails.tolist()
+        data = data.drop(['Email'], axis=1)
         data = data.to_numpy()
         # print(data[:60])
 
@@ -90,14 +97,17 @@ class MemberChurnPred:
 
     # ---------- 확률 ----------
     member_id_list = []
+    email_list = []
     model_y_list = []
     true_y_list = []
     prob_churn_list = []
 
     def get_prob(self):
-        self.reader.context = os.path.join(baseurl, os.path.join('member', 'saved_data'))
+        self.reader.context = os.path.join(baseurl, 'data')
         self.reader.fname = 'member_refined.csv'
         data = self.reader.csv_to_dframe()
+        data = data.drop(['Email'], axis=1)
+        print(f'***************{data}')
         y = data['Exited']
         member_ids = data['CustomerId']
         data = self.create_train(data)
@@ -128,11 +138,14 @@ class MemberChurnPred:
         self.prob_churn_list = churn_proba.tolist()
 
         self.save_proba_file(data, churn_proba, proba)
+        refined_data = self.save_proba_database()
+        return refined_data
 
     def save_proba_file(self, data, churn_proba, proba):
         columns = ['회원ID', '모델 답', '실제 답', '이탈 가능성']
         refined_dict = {
             'MemberID': self.member_id_list,
+            'Email': self.email_list,
             'Model_Y': self.model_y_list,
             'True_Y': self.true_y_list,
             'Prob_churn': self.prob_churn_list
@@ -141,9 +154,21 @@ class MemberChurnPred:
         refined_data = pd.DataFrame(refined_dict)
         print(refined_data)
         
-        context = os.path.join(os.path.join(baseurl, 'memberChurn_pred'), 'saved_data')
+        context = os.path.join(baseurl, 'saved_data')
         refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'), index=False)
         print('file saved')
+
+    def save_proba_database(self):
+        refined_dict = {
+            'Email': self.email_list,
+            'Prob_churn': self.prob_churn_list
+        }
+
+        refined_data = pd.DataFrame(refined_dict)
+
+        return refined_data
+
+
 
 if __name__ == '__main__':
     training = MemberChurnPred()

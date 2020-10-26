@@ -48,4 +48,4 @@ class BoardDao(BoardDto):
         db.session.commit()
 
 # b_dao = BoardDao()
-# b_dao.insert_many()
+# BoardDao.insert_many()

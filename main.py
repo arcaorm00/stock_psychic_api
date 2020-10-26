@@ -5,13 +5,14 @@ from com_stock_api.ext.routes import initialize_routes
 
 # from com_stock_api.member import member
 from com_stock_api.member.member_api import Member, Members
+from com_stock_api.member import member
 from com_stock_api.board.board_api import Board, Boards
+from com_stock_api.board import board
 from com_stock_api.comment.comment_api import Comment, Comments
 from com_stock_api.trading.trading_api import Trading, Tradings
 from com_stock_api.memberChurn_pred.memberChurn_pred_api import MemberChurnPred, MemberChurnPreds
 from com_stock_api.recommend_stock.recommend_stock_api import RecommendStock, RecommendStocks
-from com_stock_api.member import member
-from com_stock_api.board import board
+
 
 from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
 from com_stock_api.us_covid.us_covid_api import USCovid, USCovids

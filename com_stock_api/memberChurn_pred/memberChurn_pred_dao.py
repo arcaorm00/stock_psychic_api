@@ -1,5 +1,6 @@
-from com_stock_api.ext.db import db
+from com_stock_api.ext.db import db, openSession
 from com_stock_api.memberChurn_pred.memberChurn_pred_dto import MemberChurnPredDto
+from com_stock_api.memberChurn_pred.memberChurn_pred_pro import MemberChurnPred
 import pandas as pd
 import json
 
@@ -24,11 +25,27 @@ class MemberChurnPredDao(MemberChurnPredDto):
         db.session.commit()
     
     @staticmethod
+    def insert_many():
+        print('*******insert many')
+        service = MemberChurnPred()
+        Session = openSession()
+        session = Session()
+        df = service.hook()
+        print(df.head())
+        session.bulk_insert_mappings(MemberChurnPredDto, df.to_dict(orient="records"))
+        session.commit()
+        session.close()
+
+    @staticmethod
     def modify_member(member):
         db.session.add(member)
         db.commit()
     
+    @classmethod
     def delete_member(cls, email):
         data = cls.query.get(email)
         db.session.delete(data)
         db.session.commit()
+
+# mcp_dao = MemberChurnPredDao()
+# MemberChurnPredDao.insert_many()

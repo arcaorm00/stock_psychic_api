@@ -46,8 +46,7 @@ class MemberDao(MemberDto):
     @staticmethod
     def insert_many():
         service = MemberPro()
-        Session = openSession()
-        session = Session()
+        session = openSession()
         df = service.hook()
         print(df.head())
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
@@ -66,4 +65,4 @@ class MemberDao(MemberDto):
         db.session.commit()
 
 # m_dao = MemberDao()
-# m_dao.insert_many()
+# MemberDao.insert_many()
