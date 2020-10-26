@@ -76,6 +76,10 @@ class BoardVo:
 class BoardDao(BoardDto):
 
     @classmethod
+    def count(cls):
+        return cls.query.count()
+
+    @classmethod
     def find_all(cls):
         sql = cls.query.order_by(cls.regdate.desc())
         df = pd.read_sql(sql.statement, sql.session.bind)
@@ -137,7 +141,7 @@ class BoardPro:
     def __init__(self):
         # print(f'basedir: {basedir}')
         self.reader = FileReader()
-        self.datapath = os.path.abspath('com_stock_api/board')
+        self.datapath = os.path.abspath(os.path.dirname(__file__))
 
     def process(self):
         file_data = self.get_data()

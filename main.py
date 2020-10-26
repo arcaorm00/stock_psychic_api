@@ -5,6 +5,7 @@ from com_stock_api.ext.routes import initialize_routes
 
 # from com_stock_api.member import member
 from com_stock_api.resources.member import MemberDao
+from com_stock_api.resources.board import BoardDao
 
 from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
 from com_stock_api.us_covid.us_covid_api import USCovid, USCovids
@@ -34,10 +35,17 @@ api = Api(app)
 
 with app.app_context():
     db.create_all()
+
 with app.app_context():
     count = MemberDao.count()
     print(f'Members Total Count is {count}')
     if count == 0:
         MemberDao.insert_many()
+
+with app.app_context():
+    count = BoardDao.count()
+    print(f'Boards Total Count is {count}')
+    if count == 0:
+        BoardDao.insert_many()
 
 initialize_routes(api)

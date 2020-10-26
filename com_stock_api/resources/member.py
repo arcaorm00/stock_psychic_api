@@ -147,7 +147,8 @@ class MemberDao(MemberDto):
     @staticmethod
     def insert_many():
         service = MemberPro()
-        session = openSession()
+        Session = openSession()
+        session = Session()
         df = service.hook()
         print(df.head())
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
@@ -202,7 +203,7 @@ class MemberDBDataProcessing:
     def __init__(self):
         # print(f'basedir: {basedir}')
         self.fileReader = FileReader()
-        self.datapath = os.path.abspath('com_stock_api/member')
+        self.datapath = os.path.abspath(os.path.dirname(__file__))
 
     def process(self, data):
         service = self
