@@ -24,7 +24,7 @@ class InvestingDto(db.Model):
     id: int = db.Column(db.Integer, primary_key = True, index = True)
     date : str = db.Column(db.Date)
     ticker : str = db.Column(db.String(30)) #stock symbol
-    link : str = db.Column(db.String(30))
+    link : str = db.Column(db.String(300))
     headline : str = db.Column(db.String(255))
     neg : float = db.Column(db.Float)
     pos : float = db.Column(db.Float)

@@ -1,6 +1,6 @@
 from com_stock_api.ext.db import db
 from com_stock_api.resources.member import MemberDto
-from com_stock_api.yhfinance.yhfinance_dto import YHFinanceDto
+from com_stock_api.resources.yhfinance import YHFinanceDto
 from com_stock_api.naver_finance.dto import StockDto
 import datetime
 

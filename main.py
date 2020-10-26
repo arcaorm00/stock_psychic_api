@@ -6,7 +6,10 @@ from com_stock_api.ext.routes import initialize_routes
 # from com_stock_api.member import member
 from com_stock_api.resources.member import MemberDao
 from com_stock_api.resources.board import BoardDao
+from com_stock_api.resources.comment import CommentDao
 from com_stock_api.resources.member_churn_pred import MemberChurnPredDao
+from com_stock_api.resources.recommend_stock import RecommendStockDao
+from com_stock_api.resources.trading import TradingDao
 
 from com_stock_api.resources.prediction import PredictionDao
 from com_stock_api.resources.uscovid import USCovidDao
