@@ -35,6 +35,7 @@ class Member(Resource):
         params_str = ''
         for key in params.key():
             params_str += 'key: {}, value: {}\n' .format(key, params[key])
+        print(f'params_str: {params_str}')
         return {'code': 0, 'message': 'SUCCESS'}, 200    
 
     @staticmethod
@@ -72,6 +73,7 @@ class Auth(Resource):
 
     def post(self):
         body = request.get_json()
+        print(f'body: {body}')
         member = MemberDto(**body)
         MemberDao.save(member)
         email = member.email
