@@ -8,10 +8,10 @@ from com_stock_api.resources.member import MemberDao
 from com_stock_api.resources.board import BoardDao
 from com_stock_api.resources.member_churn_pred import MemberChurnPredDao
 
-from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
-from com_stock_api.us_covid.us_covid_api import USCovid, USCovids
-from com_stock_api.yhfinance.yhfinance_api import YHFinance, YHFinances
-from com_stock_api.yhnews.yhnews_api import YHNews, YHNewses
+from com_stock_api.resources.prediction import PredictionDao
+from com_stock_api.resources.uscovid import USCovidDao
+from com_stock_api.resources.yhfinance import YHFinanceDao
+from com_stock_api.resources.investingnews import InvestingDao
 
 from com_stock_api.korea_covid.api import KoreaCovid,KoreaCovids
 from com_stock_api.kospi_pred.api import Kospi,Kospis
@@ -54,5 +54,21 @@ with app.app_context():
     print(f'MemberChurnPredictions Total Count is {count}')
     if count == 0:
         MemberChurnPredDao.insert_many()
+
+with app.app_context():
+    count2 = USCovidDao.count()
+    print(f'US Covid case Total Count is {count}')
+    if count2 == 0:
+        USCovidDao.insert_many()
+with app.app_context():
+    count3 = YHFinanceDao.count()
+    print(f'NASDAQ history data Total Count is {count}')
+    if count3 == 0:
+        YHFinanceDao.insert_many()
+with app.app_context():
+    count4 = InvestingDao.count()
+    print(f'Stock news Total Count is {count}')
+    if count4 == 0:
+        InvestingDao.insert_many()
 
 initialize_routes(api)
