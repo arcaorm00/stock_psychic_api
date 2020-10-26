@@ -25,9 +25,11 @@ class Board(Resource):
     def get(id):
         try:
             board = BoardDao.find_by_id(id)
+            # print(board)
             if board:
-                return board.json()
+                return board
         except Exception as e:
+            print(e)
             return {'message': 'Board not found'}, 404
 
     @staticmethod

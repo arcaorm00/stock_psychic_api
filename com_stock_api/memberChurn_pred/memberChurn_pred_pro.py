@@ -169,7 +169,6 @@ class MemberChurnPred:
         return refined_data
 
 
-
 if __name__ == '__main__':
     training = MemberChurnPred()
     training.hook()

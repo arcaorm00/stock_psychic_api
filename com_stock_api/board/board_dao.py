@@ -1,6 +1,7 @@
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.board.board_dto import BoardDto
 from com_stock_api.board.board_pro import BoardPro
+from sqlalchemy import desc
 import pandas as pd
 import json
 
@@ -8,13 +9,15 @@ class BoardDao(BoardDto):
 
     @classmethod
     def find_all(cls):
-        sql = cls.query
+        sql = cls.query.order_by(cls.regdate.desc())
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_by_id(cls, id):
-        return cls.query.filter_by(id == id).first()
+        sql = cls.query.filter(cls.id.like(id))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_by_member(cls, email):

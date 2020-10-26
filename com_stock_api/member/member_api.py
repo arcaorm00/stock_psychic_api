@@ -8,7 +8,7 @@ import json
 parser = reqparse.RequestParser()
 parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
 parser.add_argument('password', type=str, required=True, help='This field cannot be left blank')
-parser.add_argument('name', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('name', type=str, required=False)
 parser.add_argument('profile', type=str, required=False, default='noimage.png')
 parser.add_argument('geography', type=str, required=False)
 parser.add_argument('gender', type=str, required=False)
@@ -18,16 +18,16 @@ parser.add_argument('stock_qty', type=int, required=False)
 parser.add_argument('balance', type=float, required=False)
 parser.add_argument('has_credit', type=int, required=False)
 parser.add_argument('credit_score', type=int, required=False)
-parser.add_argument('is_active_member', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('is_active_member', type=int, required=False)
 parser.add_argument('estimated_salary', type=float, required=False)
-parser.add_argument('role', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('role', type=str, required=False)
 
 class Member(Resource):
 
     @staticmethod
     def post():
         args = parser.parse_args()
-        print(f'Member{args["id"]} added')
+        print(f'Member{args["email"]} added')
         params = json.loads(request.get_data(), encoding='utf-8')
         if len(params) == 0:
             return 'No parameter'
@@ -39,7 +39,6 @@ class Member(Resource):
 
     @staticmethod
     def get(email):
-        print(f'Member {id} added')
         try:
             member = MemberDao.find_by_email(email)
             if member:
@@ -50,13 +49,13 @@ class Member(Resource):
     @staticmethod
     def update():
         args = parser.parse_args()
-        print(f'Member {args["id"]} updated')
+        print(f'Member {args["email"]} updated')
         return {'code': 0, 'message': 'SUCCESS'}, 200
     
     @staticmethod
     def delete():
         args = parser.parse_args()
-        print(f'Member {args["id"]} deleted')
+        print(f'Member {args["email"]} deleted')
         return {'code': 0, 'message': 'SUCCESS'}, 200
 
 class Members(Resource):

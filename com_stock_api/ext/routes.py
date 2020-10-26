@@ -20,7 +20,7 @@ def initialize_routes(api):
     print('=============== route.py')
     api.add_resource(Access, '/api/access')
     api.add_resource(Boards, '/api/boards')
-    api.add_resource(Board, '/api/board')
+    api.add_resource(Board, '/api/board/<string:id>')
     api.add_resource(Comments, '/api/comments')
     api.add_resource(Comment, '/api/comment/<string:id>')
     api.add_resource(Tradings, '/api/tradings')
