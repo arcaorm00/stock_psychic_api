@@ -107,7 +107,7 @@ class CommentDao(CommentDto):
     def find_by_boardid(cls, board_id):
         sql = cls.query.filter(cls.board_id.like(board_id))
         df = pd.read_sql(sql.statement, sql.session.bind)
-        print(json.loads(df.to_json(orient='records')))
+        # print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @staticmethod
@@ -152,8 +152,9 @@ parser.add_argument('comment_step', type=int, required=True, help='This field ca
 
 
 class Comment(Resource):
-        
-    def post(self):
+    
+    @staticmethod
+    def post():
         body = request.get_json()
         print(f'body: {body}')
         comment = CommentDto(**body)
@@ -161,11 +162,15 @@ class Comment(Resource):
         content = comment.comment
         return {'comment': str(content)}, 200
     
-    def get(self, id):
-        comment = CommentDao.find_by_id(id)
-        if comment:
-            return comment.json()
-        return {'message': 'Comment not found'}, 404
+    @staticmethod
+    def get(id):
+        try:
+            comment = CommentDao.find_by_id(id)
+            if comment:
+                return comment
+        except Exception as e:
+            print(e)
+            return {'message': 'Comment not found'}, 404
 
     @staticmethod
     def update():
@@ -184,8 +189,8 @@ class Comments(Resource):
         c_dao = CommentDao()
         c_dao.insert_many('boards')
 
-    def get(self):
-        data = CommentDao.find_by_boardid()
+    def get(self, id):
+        data = CommentDao.find_by_boardid(id)
         return data, 200
 
 

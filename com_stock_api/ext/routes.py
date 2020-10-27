@@ -22,7 +22,7 @@ def initialize_routes(api):
     api.add_resource(Access, '/api/access')
     api.add_resource(Boards, '/api/boards')
     api.add_resource(Board, '/api/board/<string:id>')
-    api.add_resource(Comments, '/api/comments')
+    api.add_resource(Comments, '/api/comments/<string:id>')
     api.add_resource(Comment, '/api/comment')
     api.add_resource(Tradings, '/api/tradings')
     api.add_resource(Trading, '/api/trading/<string:id>')

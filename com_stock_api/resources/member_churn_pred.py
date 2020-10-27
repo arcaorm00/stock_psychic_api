@@ -1,11 +1,10 @@
 from com_stock_api.ext.db import db, openSession
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from com_stock_api.resources.member import MemberDto
 
 import pandas as pd
 import json
-
 
 import os
 baseurl = os.path.abspath(os.path.dirname(__file__))
@@ -20,6 +19,215 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
 from flask_restful import Resource, reqparse
+
+
+# ---------------------- database 저장 파일을 모델링용 데이터로 전환
+# ==> database에서 회원 정보 바로 받아와서 전처리 후 모델링까지 한번에 가는 걸로
+class MemberModelingDataPreprocessing:
+    
+    def __init__(self):
+        self.filereader = FileReader()
+
+    def hook_process(self):
+        this = self.filereader
+        this.context = os.path.join(baseurl, 'saved_data')
+        # 데이터 정제 전 database data
+        this.fname = 'member_detail.csv'
+        members = this.csv_to_dframe()
+        this.train = members
+        
+        # 컬럼 삭제
+        this.train.drop(this.train.loc[this.train['CustomerId']==0].index, inplace=True)
+        print(this.train)
+        this = self.drop_feature(this, 'RowNumber') # 열 번호 삭제
+        this = self.drop_feature(this, 'Surname') # 이름 삭제
+        # this = self.drop_feature(this, 'Email') # 이메일 삭제
+        this = self.drop_feature(this, 'Role') # 권한 삭제
+        this = self.drop_feature(this, 'Password') # 비밀번호 삭제
+        this = self.drop_feature(this, 'Profile') # 프로필 이미지 삭제
+        
+        
+        # 데이터 정제
+        this = self.geography_nominal(this)
+        this = self.gender_nominal(this)
+        this = self.age_ordinal(this)
+        this = self.drop_feature(this, 'Age')
+        this = self.creditScore_ordinal(this)
+        this = self.balance_ordinal(this)
+        this = self.estimatedSalary_ordinal(this)
+
+        # 고객의 서비스 이탈과 각 칼럼간의 상관계수
+        # self.correlation_member_secession(this.train)
+
+        # label 컬럼 재배치
+        this = self.columns_relocation(this)
+
+        # 정제 데이터 저장
+        # self.save_preprocessed_data(this)
+        
+        # print(this)
+        return this.train
+        
+
+    # 고객의 서비스 이탈과 각 칼럼간의 상관계수
+    def correlation_member_secession(self, members):
+        member_columns = members.columns
+        member_correlation = {}
+        for col in member_columns:
+            cor = np.corrcoef(members[col], members['Exited'])
+            # print(cor)
+            member_correlation[col] = cor
+        # print(member_correlation)
+        '''
+        r이 -1.0과 -0.7 사이이면, 강한 음적 선형관계,
+        r이 -0.7과 -0.3 사이이면, 뚜렷한 음적 선형관계,
+        r이 -0.3과 -0.1 사이이면, 약한 음적 선형관계,
+        r이 -0.1과 +0.1 사이이면, 거의 무시될 수 있는 선형관계,
+        r이 +0.1과 +0.3 사이이면, 약한 양적 선형관계,
+        r이 +0.3과 +0.7 사이이면, 뚜렷한 양적 선형관계,
+        r이 +0.7과 +1.0 사이이면, 강한 양적 선형관계
+
+        result:
+
+        {'CustomerId': array([[ 1.        , -0.00624799], [-0.00624799,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
+        'CreditScore': array([[ 1.        , -0.02709354], [-0.02709354,  1.        ]]), ==> 거의 무시될 수 있는 선형관계
+        'Geography': array([[1.        , 0.15377058], [0.15377058, 1.        ]]), ==> 약한 양적 선형관계
+        'Gender': array([[1.        , 0.10651249], [0.10651249, 1.        ]]), ==> 약한 양적 선형관계
+        'Age': array([[1.        , 0.28532304], [0.28532304, 1.        ]]), ==> 약한 양적 선형관계
+        'Tenure': array([[ 1.        , -0.01400061], [-0.01400061,  1.        ]]), ==> 거의 무시될 수 있는 선형관계
+        'Balance': array([[1.        , 0.11853277], [0.11853277, 1.        ]]), ==> 약한 양적 선형관계
+        'NumOfProducts': array([[ 1.        , -0.04781986], [-0.04781986,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
+        'HasCrCard': array([[ 1.        , -0.00713777], [-0.00713777,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
+        'IsActiveMember': array([[ 1.        , -0.15612828], [-0.15612828,  1.        ]]), ==> 약한 음적 선형관계
+        'EstimatedSalary': array([[1.        , 0.01300995], [0.01300995, 1.        ]]),  ==> 거의 무시될 수 있는 선형관계
+        'Exited': array([[1., 1.], [1., 1.]]), 
+        'AgeGroup': array([[1.        , 0.21620629], [0.21620629, 1.        ]])} ==> 약한 양적 선형관계
+        '''
+
+
+    # ---------------------- 데이터 정제 ----------------------
+    @staticmethod
+    def create_train(this):
+        return this.train.drop('Exited', axis=1)
+
+    @staticmethod
+    def create_label(this):
+        return this.train['Exited']
+
+    @staticmethod
+    def drop_feature(this, feature) -> object:
+        this.train = this.train.drop([feature], axis=1)
+        return this
+
+    @staticmethod
+    def surname_nominal(this):
+        return this
+
+    @staticmethod
+    def creditScore_ordinal(this):
+        this.train['CreditScore'] = pd.qcut(this.train['CreditScore'], 11, labels={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return this
+
+    @staticmethod
+    def geography_nominal(this):
+        # print(this.train['Geography'].unique()) 
+        # ==> ['France' 'Spain' 'Germany']
+        geography_mapping = {'France': 1, 'Spain': 2, 'Germany': 3}
+        this.train['Geography'] = this.train['Geography'].map(geography_mapping)
+        return this
+
+    @staticmethod
+    def gender_nominal(this):
+        gender_mapping = {'Male': 0, 'Female': 1, 'Etc': 2}
+        this.train['Gender'] = this.train['Gender'].map(gender_mapping)
+        this.train = this.train
+        return this
+
+    @staticmethod
+    def age_ordinal(this):
+        train = this.train
+        train['Age'] = train['Age'].fillna(-0.5)
+        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf] # 범위
+        labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'YoungAdult', 'Adult', 'Senior']
+        train['AgeGroup'] = pd.cut(train['Age'], bins, labels=labels)
+        age_title_mapping = {
+            0: 'Unknown',
+            1: 'Baby', 
+            2: 'Child',
+            3: 'Teenager',
+            4: 'Student',
+            5: 'YoungAdult',
+            6: 'Adult',
+            7: 'Senior'
+        }
+
+        # for x in range(len(train['AgeGroup'])):
+        #     if train['AgeGroup'][x] == 'Unknown':
+        #         train['AgeGroup'][x] = age_title_mapping[train[''][x]]
+        
+        age_mapping = {
+            'Unknown': 0,
+            'Baby': 1, 
+            'Child': 2,
+            'Teenager': 3,
+            'Student': 4,
+            'YoungAdult': 5,
+            'Adult': 6,
+            'Senior': 7
+        }
+        train['AgeGroup'] = train['AgeGroup'].map(age_mapping)
+        this.train = train
+        return this
+
+    @staticmethod
+    def tenure_ordinal(this):
+        return this
+
+    @staticmethod
+    def balance_ordinal(this):
+        this.train['Balance'] = pd.qcut(this.train['Balance'].rank(method='first'), 11, labels={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return this
+
+    @staticmethod
+    def numOfProducts_ordinal(this):
+        return this
+
+    @staticmethod
+    def hasCrCard_numeric(this):
+        return this
+
+    @staticmethod
+    def isActiveMember_numeric(this):
+        return this
+
+    @staticmethod
+    def estimatedSalary_ordinal(this):
+        this.train['EstimatedSalary'] = pd.qcut(this.train['EstimatedSalary'], 11, labels={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return this
+
+
+    # ---------------------- 파일 저장 ---------------------- 
+    # def save_preprocessed_data(self, this):
+    #     this.context = os.path.join(basedir, 'saved_data')
+    #     this.train.to_csv(os.path.join(this.context, 'member_refined.csv'))
+    #     print('file saved')
+
+    # ---------------------- label 컬럼 위치 조정 ---------------------- 
+    def columns_relocation(self, this):
+        cols = this.train.columns.tolist()
+        # ['CustomerId', 'CreditScore', ... , 'EstimatedSalary', 'Exited', 'AgeGroup']
+        # cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
+        cols =  (cols[:-3] + cols[-1:]) + cols[-3:-1]
+        cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
+        # ['CustomerId', 'CreditScore', ... , 'EstimatedSalary', 'AgeGroup', 'Exited']
+        this.train = this.train[cols]
+        print(this.train)
+        return this
+
+
+
+
+
 
 class MemberChurnPredDto(db.Model):
     
@@ -51,74 +259,56 @@ class MemberChurnPredVo:
 
 
 
+Session = openSession()
+session = Session()
+member_churn_preprocess = MemberModelingDataPreprocessing()
+
+
 
 
 class MemberChurnPredDao(MemberChurnPredDto):
 
-    @classmethod
-    def count(cls):
-        return cls.query.count()
-
-    @classmethod
-    def find_all(cls):
-        sql = cls.query
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        return json.loads(df.to_json(orient='records'))
-
-    @classmethod
-    def find_by_email(cls, member):
-        sql = cls.query.filter(cls.email.like(member.email))
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        print(json.loads(df.to_json(orient='records')))
-        return json.loads(df.to_json(orient='records'))
-    
     @staticmethod
-    def save(member):
-        db.session.add(member)
-        db.session.commit()
-    
-    @staticmethod
-    def insert_many():
-        print('*******insert many')
-        service = MemberChurnPredService()
+    def bulk():
         Session = openSession()
         session = Session()
-        df = service.hook()
+        member_churn_preprocess = MemberModelingDataPreprocessing()
+        df = member_churn_preprocess.hook_process()
         print(df.head())
-        session.bulk_insert_mappings(MemberChurnPredDto, df.to_dict(orient="records"))
+        session.bulk_insert_mappings(MemberChurnPredDto, df.to_dict(orient='records'))
         session.commit()
         session.close()
 
     @staticmethod
-    def modify_member(member):
-        db.session.add(member)
-        db.commit()
+    def count():
+        return session.query(func.count(MemberChurnPredDto.email)).one()
     
-    @classmethod
-    def delete_member(cls, email):
-        data = cls.query.get(email)
-        db.session.delete(data)
+    @staticmethod
+    def save(member_pred):
+        new_pred = MemberChurnPredDto()
+        db.session.add(new_pred)
         db.session.commit()
+
 
 # mcp_dao = MemberChurnPredDao()
 # MemberChurnPredDao.insert_many()
 
+# MemberChurnPredDao.bulk()
+
 
 
 
 
 # =====================================================================
 # =====================================================================
-# ============================== service ==============================
+# ============================== modeling =============================
 # =====================================================================
 # =====================================================================
 
 
 
 
-
-
-class MemberChurnPredService:
+class MemberChurnPredModel(object):
 
     x_train: object = None
     y_train: object = None
@@ -130,6 +320,7 @@ class MemberChurnPredService:
 
     def __init__(self):
         self.reader = FileReader()
+        self.path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'member_churn')
 
     def hook(self):
         self.get_data()
@@ -140,9 +331,7 @@ class MemberChurnPredService:
         refined_data = self.get_prob()
         refined_data = refined_data.rename({'Email': 'email', 'Prob_churn': 'probability_churn'}, axis='columns')
 
-        return refined_data
-
-
+        
     def create_train(self, this):
         return this.drop('Exited', axis=1)
 
@@ -186,6 +375,10 @@ class MemberChurnPredService:
         print('********** train model **********')
         self.model.fit(x=self.x_train, y=self.y_train, 
         validation_data=(self.x_validation, self.y_validation), epochs=20, verbose=1)
+
+        saver = tf.train.Saver()
+        saver.save(self.model, self.path+'/member_churn.ckpt')
+        print('모델 저장 완료')
     
     # 모델 평가
     def eval_model(self):
@@ -247,7 +440,6 @@ class MemberChurnPredService:
         return refined_data
 
     def save_proba_file(self, data, churn_proba, proba):
-        columns = ['회원ID', '모델 답', '실제 답', '이탈 가능성']
         refined_dict = {
             'MemberID': self.member_id_list,
             'Email': self.email_list,
@@ -260,7 +452,7 @@ class MemberChurnPredService:
         print(refined_data)
         
         context = os.path.join(baseurl, 'saved_data')
-        refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'), index=False)
+        # refined_data.to_csv(os.path.join(context, 'member_churn_prob.csv'), index=False)
         print('file saved')
 
     def save_proba_database(self):
@@ -272,6 +464,23 @@ class MemberChurnPredService:
         refined_data = pd.DataFrame(refined_dict)
 
         return refined_data
+
+
+
+
+# =====================================================================
+# =====================================================================
+# ============================== service ==============================
+# =====================================================================
+# =====================================================================
+
+
+
+
+
+class MemberChurnPredService:
+
+    ...
 
 
 
@@ -325,4 +534,5 @@ class MemberChurnPred(Resource):
 class MemberChurnPreds(Resource):
 
     def get(self):
-        return {'member_churn_preds': list(map(lambda memberChurnPred: memberChurnPred.json(), MemberChurnPredDao.find_all()))}
+        member_churn_preds = MemberChurnPredDao.find_all()
+        return member_churn_preds
