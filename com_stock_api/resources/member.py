@@ -623,7 +623,7 @@ class Member(Resource):
         return {'code': 0, 'message': 'SUCCESS'}, 200    
 
     @staticmethod
-    def get(email):
+    def get(email: str):
         try:
             member = MemberDao.find_by_email(email)
             print(f'member: {member}')

@@ -180,6 +180,9 @@ class Comment(Resource):
    
     @staticmethod
     def delete():
+        print('여 기 온 다 네')
+        id = request.get_json()
+        print(f'id: {id}')
         args = parser.parse_args()
         print(f'Comment {args["id"]} deleted')
         return {'code': 0, 'message': 'SUCCESS'}, 200
