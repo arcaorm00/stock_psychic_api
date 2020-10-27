@@ -4,19 +4,17 @@ from com_stock_api.ext.db import url, db
 from com_stock_api.ext.routes import initialize_routes
 
 # from com_stock_api.member import member
-from com_stock_api.member.member_api import Member, Members
-from com_stock_api.board.board_api import Board, Boards
-from com_stock_api.comment.comment_api import Comment, Comments
-from com_stock_api.trading.trading_api import Trading, Tradings
-from com_stock_api.memberChurn_pred.memberChurn_pred_api import MemberChurnPred, MemberChurnPreds
-from com_stock_api.recommend_stock.recommend_stock_api import RecommendStock, RecommendStocks
-from com_stock_api.member import member
-from com_stock_api.board import board
+from com_stock_api.resources.member import MemberDao
+from com_stock_api.resources.board import BoardDao
+from com_stock_api.resources.comment import CommentDao
+from com_stock_api.resources.member_churn_pred import MemberChurnPredDao
+from com_stock_api.resources.recommend_stock import RecommendStockDao
+from com_stock_api.resources.trading import TradingDao
 
-from com_stock_api.nasdaq_pred.prediction_api import Prediction, Predictions
-from com_stock_api.us_covid.us_covid_api import USCovid, USCovids
-from com_stock_api.yhfinance.yhfinance_api import YHFinance, YHFinances
-from com_stock_api.yhnews.yhnews_api import YHNews, YHNewses
+from com_stock_api.resources.prediction import PredictionDao
+from com_stock_api.resources.uscovid import USCovidDao
+from com_stock_api.resources.yhfinance import YHFinanceDao
+from com_stock_api.resources.investingnews import InvestingDao
 
 from com_stock_api.korea_covid.api import KoreaCovid,KoreaCovids
 from com_stock_api.kospi_pred.api import Kospi,Kospis
@@ -26,9 +24,10 @@ from com_stock_api.naver_news.api import News,News_
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
-app.register_blueprint(member)
-app.register_blueprint(board)
+CORS(app, resources={r'/api/*': {"origins": "*"}})
+
+# app.register_blueprint(member)
+# app.register_blueprint(board)
 
 print('====== url ======')
 print(url)
@@ -38,65 +37,41 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 api = Api(app)
 
-# @app.before_first_request
-# def create_tables():
-#     db.create_all()
-
-initialize_routes(api)
-
 with app.app_context():
     db.create_all()
 
-@app.route('/api')
-def connect_test():
-    return {'message': 'connect success'}
+with app.app_context():
+    count = MemberDao.count()
+    print(f'Members Total Count is {count}')
+    if count == 0:
+        MemberDao.insert_many()
 
-# ===================== Member
-# @app.route('/api/member/insert', methods=['POST'])
-# def insert_member():
-#     result = Member.post()
-#     print(result)
-#     return result
+with app.app_context():
+    count = BoardDao.count()
+    print(f'Boards Total Count is {count}')
+    if count == 0:
+        BoardDao.insert_many()
 
-# @app.route('/api/members/list')
-# def list_members():
-#     members = Members()
-#     members_list = members.get()
-#     print(members_list)
-#     return members_list
+with app.app_context():
+    count = MemberChurnPredDao.count()
+    print(f'MemberChurnPredictions Total Count is {count}')
+    if count == 0:
+        MemberChurnPredDao.insert_many()
 
-@app.route('/api/member', methods=['POST'])
-def get_members_by_email():
-    email = request.get_json()['email']
-    print(email)
-    member = Member.get(email)
-    return member
+with app.app_context():
+    count2 = USCovidDao.count()
+    print(f'US Covid case Total Count is {count}')
+    if count2 == 0:
+        USCovidDao.insert_many()
+with app.app_context():
+    count3 = YHFinanceDao.count()
+    print(f'NASDAQ history data Total Count is {count}')
+    if count3 == 0:
+        YHFinanceDao.insert_many()
+with app.app_context():
+    count4 = InvestingDao.count()
+    print(f'Stock news Total Count is {count}')
+    if count4 == 0:
+        InvestingDao.insert_many()
 
-# ===================== Board
-# @app.route('/api/boards/insert')
-# def insert_article():
-#     result = Board.post()
-#     return result
-
-# @app.route('/api/boards/list')
-# def list_articles():
-#     boards_list = Boards.get()
-#     print(boards_list)
-#     return boards_list
-
-# @app.route('/api/boards/detail')
-# def get_article_by_id(id):
-#     board = Board.get(id)
-#     return board
-
-# # ===================== trading
-# @app.route('/api/trading/insert')
-# def insert_trading():
-#     result = Trading.post()
-#     return result
-
-# @app.route('/api/trading/get-by-email')
-# def get_tradings_by_email(email):
-#     trading_list = Tradings.get_by_email(email)
-#     print(trading_list)
-#     return trading_list
+initialize_routes(api)
