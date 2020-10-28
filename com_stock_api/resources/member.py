@@ -37,6 +37,8 @@ class MemberDto(db.Model):
     role: str = db.Column(db.String(30), nullable=False, default='ROLE_USER')
     # exited: int = db.Column(db.Integer, nullable=False, default=0)
 
+    tradings = db.relationship('TradingDto', back_populates='member', lazy='dynamic')
+
     def __init__(self, email, password, name, profile, geography, gender, age, tenure, stock_qty, balance, has_credit, credit_score, is_active_member, estimated_salary, role):
         self.email = email
         self.password = password
@@ -156,12 +158,13 @@ class MemberDao(MemberDto):
         session.close()
     
     @staticmethod
-    def modify_member(member):
+    def update(member):
+        print('UserDao UPDATE COPY THAT!')
         db.session.add(member)
         db.session.commit()
     
     @classmethod
-    def delete_member(cls, email):
+    def delete(cls, email):
         data = cls.query.get(email)
         db.session.delete(data)
         db.session.commit()
@@ -634,10 +637,16 @@ class Member(Resource):
             return {'message': 'Member not found'}, 404
     
     @staticmethod
-    def update():
+    def put(email: str):
         args = parser.parse_args()
-        print(f'Member {args["email"]} updated')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+        print(f'Member {args} updated')
+        try:
+            print('inner try')
+            MemberDao.update(args)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Member not found'}, 404
     
     @staticmethod
     def delete():

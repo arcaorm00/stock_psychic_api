@@ -210,7 +210,7 @@ parser.add_argument('regdate', type=str, required=True, help='This field cannot 
 class Board(Resource):
     
     @staticmethod
-    def post():
+    def post(id):
         args = parser.parse_args()
         print(f'Board {args["id"]} added')
         params = json.loads(request.get_data(), encoding='utf-8')

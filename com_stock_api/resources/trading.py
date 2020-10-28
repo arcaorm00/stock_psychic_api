@@ -23,6 +23,8 @@ class TradingDto(db.Model):
     price: float = db.Column(db.FLOAT, nullable=False)
     trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
 
+    member = db.relationship('MemberDto', back_populates='tradings')
+
     def __init__(self, id, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
         self.id = id
         self.email = email
