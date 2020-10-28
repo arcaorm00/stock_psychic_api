@@ -25,6 +25,8 @@ class CommentDto(db.Model):
     comment_level: int = db.Column(db.Integer, nullable=False)
     comment_step: int = db.Column(db.Integer, nullable=False)
 
+    board = db.relationship('BoardDto', back_populates='comments')
+
     def __init__(self, board_id, email, comment, regdate, comment_ref, comment_level, comment_step):
         self.board_id = board_id
         self.email = email

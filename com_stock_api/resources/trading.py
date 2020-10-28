@@ -25,8 +25,7 @@ class TradingDto(db.Model):
 
     member = db.relationship('MemberDto', back_populates='tradings')
 
-    def __init__(self, id, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
-        self.id = id
+    def __init__(self, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
         self.email = email
         self.kospi_stock_id = kospi_stock_id
         self.nasdaq_stock_id = nasdaq_stock_id

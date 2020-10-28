@@ -30,8 +30,9 @@ class BoardDto(db.Model):
     content: str = db.Column(db.String(20000), nullable=False)
     regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
 
-    def __init__(self, id, email, article_type, title, content, regdate):
-        self.id = id
+    comments = db.relationship('CommentDto', back_populates='board', lazy='dynamic')
+
+    def __init__(self, email, article_type, title, content, regdate):
         self.email = email
         self.article_type = article_type
         self.title = title
@@ -211,9 +212,15 @@ class Board(Resource):
     
     @staticmethod
     def post(id):
-        args = parser.parse_args()
-        print(f'Board {args["id"]} added')
-        params = json.loads(request.get_data(), encoding='utf-8')
+        print('여 기 온 다 네')
+        # args = parser.parse_args()
+        # print(f'Board {args["id"]} added')
+        # params = json.loads(request.get_data(), encoding='utf-8')
+        body = request.get_json()
+        print(f'body: {body}')
+        board = BoardDto(**body)
+        BoardDao.save(board)
+        return {'board': str(board.id)}, 200
     
     @staticmethod
     def get(id):
