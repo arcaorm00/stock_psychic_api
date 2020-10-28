@@ -97,8 +97,8 @@ class CommentDao(CommentDto):
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_id(cls, comment):
-        sql = cls.query.filter(cls.id.like(comment.id))
+    def find_by_id(cls, id):
+        sql = cls.query.filter(cls.id.like(id))
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -142,13 +142,13 @@ class CommentDao(CommentDto):
 
 parser = reqparse.RequestParser()
 parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
-parser.add_argument('board_id', type=int, required=True, help='This field cannot be left blank')
-parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
-parser.add_argument('comment', type=str, required=True, help='This field cannot be left blank')
-parser.add_argument('regdate', type=str, required=True, help='This field cannot be left blank')
-parser.add_argument('comment_ref', type=int, required=True, help='This field cannot be left blank')
-parser.add_argument('comment_level', type=int, required=True, help='This field cannot be left blank')
-parser.add_argument('comment_step', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('board_id', type=int)
+parser.add_argument('email', type=str)
+parser.add_argument('comment', type=str)
+parser.add_argument('regdate', type=str)
+parser.add_argument('comment_ref', type=int)
+parser.add_argument('comment_level', type=int)
+parser.add_argument('comment_step', type=int)
 
 
 class Comment(Resource):
@@ -174,15 +174,13 @@ class Comment(Resource):
 
     @staticmethod
     def update():
-        args = parser.parse_args()
+        args = request.get_json()
         print(f'Comment {args["id"]} updated')
         return {'code': 0, 'message': 'SUCCESS'}, 200
    
     @staticmethod
     def delete():
         print('여 기 온 다 네')
-        id = request.get_json()
-        print(f'id: {id}')
         args = parser.parse_args()
         print(f'Comment {args["id"]} deleted')
         return {'code': 0, 'message': 'SUCCESS'}, 200
