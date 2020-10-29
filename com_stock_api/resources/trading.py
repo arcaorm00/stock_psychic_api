@@ -8,7 +8,33 @@ import pandas as pd
 import json
 
 from typing import List
+from flask import request, jsonify
 from flask_restful import Resource, reqparse
+
+
+
+'''
+ * @ Module Name : trading.py
+ * @ Description : Trading stock
+ * @ since 2020.10.15
+ * @ version 1.0
+ * @ Modification Information
+ * @ author 곽아름
+ * @ special reference libraries
+ *     flask_restful
+''' 
+
+
+
+
+# =====================================================================
+# =====================================================================
+# ===================        modeling         =========================
+# =====================================================================
+# =====================================================================
+
+
+
 
 class TradingDto(db.Model):
 
@@ -116,34 +142,35 @@ class TradingDao(TradingDto):
 
 
 
+parser = reqparse.RequestParser()
+parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('kospi_stock_id', type=int, required=False, help='This field cannot be left blank')
+parser.add_argument('nasdaq_stock_id', type=int, required=False, help='This field cannot be left blank')
+parser.add_argument('stock_qty', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('price', type=float, required=True, help='This field cannot be left blank')
+parser.add_argument('trading_date', type=str, required=True, help='This field cannot be left blank')
 
 
-
-class Trading(Resource):
-    def __init__(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
-        parser.add_argument('kospi_stock_id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('nasdaq_stock_id', type=int, required=False, help='This field cannot be left blank')
-        parser.add_argument('stock_qty', type=int, required=True, help='This field cannot be left blank')
-        parser.add_argument('price', type=float, required=True, help='This field cannot be left blank')
-        parser.add_argument('trading_date', type=str, required=True, help='This field cannot be left blank')
+class Trading(Resource):        
         
-    def post(self):
-        data = self.parser.parse_args()
-        trading = TradingDto(data['id'], data['email'], data['kospi_stock_id'], data['nasdaq_stock_id'], data['stock_qty'], data['price'], data['trading_date'])
-        try:
-            trading.save()
-        except:
-            return {'message': 'An error occured inserting the tradings'}, 500
-        return trading.json(), 201
+    @staticmethod
+    def post():
+        body = request.get_json()
+        print(f'body: {body}')
+        trading = TradingDto(**body)
+        TradingDao.save(trading)
+        return {'trading': str(trading.id)}, 200
     
-    def get(self, id):
-        trading = TradingDao.find_by_id(id)
-        if trading:
-            return trading.json()
-        return {'message': 'Trading not found'}, 404
+    @staticmethod
+    def get(id):
+        try:
+            trading = TradingDao.find_by_id(id)
+            if trading:
+                return trading
+        except Exception as e:
+            print(e)
+            return {'message': 'Trading not found'}, 404
 
     def put(self, id):
         data = self.parser.parse_args()
@@ -156,8 +183,11 @@ class Trading(Resource):
         return trading.json()
 
 class Tradings(Resource):
-    def get(self):
-        return {'tradings': list(map(lambda trading: trading.json(), TradingDao.find_all()))}
 
-    def get_by_email(self, email):
-        return {'tradings': list(map(lambda trading: trading.json(), TradingDao.find_by_email(email)))}
+    def post(self):
+        t_dao = TradingDao()
+        t_dao.insert_many('tradings')
+
+    def get(self):
+        data = TradingDao.find_all()
+        return data, 200

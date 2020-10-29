@@ -20,6 +20,21 @@ from flask_restful import Resource, reqparse
 
 
 
+
+'''
+ * @ Module Name : board.py
+ * @ Description : Board
+ * @ since 2020.10.15
+ * @ version 1.0
+ * @ Modification Information
+ * @ author 곽아름
+ * @ special reference libraries
+ *     flask_restful, sqlalchemy
+''' 
+
+
+
+
 # =====================================================================
 # =====================================================================
 # ===================      preprocessing      =========================
@@ -33,21 +48,18 @@ from flask_restful import Resource, reqparse
 class BoardPro:
 
     def __init__(self):
-        # print(f'basedir: {basedir}')
         self.reader = FileReader()
         self.datapath = os.path.abspath(os.path.dirname(__file__))
 
     def process(self):
         file_data = self.get_data()
         data = self.refine_data(file_data)
-        # self.save_data(data)
         return data
 
     def get_data(self):
         self.reader.context = os.path.join(self.datapath, 'data')
         self.reader.fname = 'kyobo_notice.csv'
         notice_file = self.reader.csv_to_dframe()
-        # print(notice_file)
         return notice_file
     
     @staticmethod
@@ -66,8 +78,6 @@ class BoardPro:
             con = con.replace('교보증권', 'Stock Psychic')
             con = con.replace('\r', '\n')
             data['content'][idx] = con
-        # data['regdate'] = ['20'+ regdate for regdate in data['regdate']]
-
         print(data)
         return data
 
@@ -188,10 +198,13 @@ class BoardDao(BoardDto):
         session.commit()
         session.close()
     
-    @staticmethod
-    def modify_board(board):
-        db.session.add(board)
-        db.commit()
+    @classmethod
+    def modify_board(cls, board):
+        service = BoardPro()
+        Session = openSession()
+        session = Session()
+        board = session.query.filter(cls.id.like(board.id)).update({'title': board.title, 'content': board.content})
+        session.commit()
 
     @classmethod
     def delete_board(cls, id):
@@ -227,9 +240,6 @@ class Board(Resource):
     
     @staticmethod
     def post(id):
-        # args = parser.parse_args()
-        # print(f'Board {args["id"]} added')
-        # params = json.loads(request.get_data(), encoding='utf-8')
         body = request.get_json()
         print(f'body: {body}')
         board = BoardDto(**body)
@@ -240,7 +250,6 @@ class Board(Resource):
     def get(id):
         try:
             board = BoardDao.find_by_id(id)
-            # print(board)
             if board:
                 return board
         except Exception as e:

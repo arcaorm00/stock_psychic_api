@@ -11,6 +11,32 @@ from flask import request, jsonify
 from flask_restful import Resource, reqparse
 import datetime
 
+
+
+
+
+'''
+ * @ Module Name : comment.py
+ * @ Description : Comment
+ * @ since 2020.10.15
+ * @ version 1.0
+ * @ Modification Information
+ * @ author 곽아름
+ * @ special reference libraries
+ *     flask_restful
+''' 
+
+
+
+
+# =====================================================================
+# =====================================================================
+# =======================      model      =============================
+# =====================================================================
+# =====================================================================
+
+
+
 class CommentDto(db.Model):
 
     __tablename__ = "comments"
@@ -109,7 +135,6 @@ class CommentDao(CommentDto):
     def find_by_boardid(cls, board_id):
         sql = cls.query.filter(cls.board_id.like(board_id))
         df = pd.read_sql(sql.statement, sql.session.bind)
-        # print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @staticmethod
@@ -181,8 +206,7 @@ class Comment(Resource):
         return {'code': 0, 'message': 'SUCCESS'}, 200
    
     @staticmethod
-    def delete():
-        print('여 기 온 다 네')
+    def delete(id):
         args = parser.parse_args()
         print(f'Comment {args["id"]} deleted')
         return {'code': 0, 'message': 'SUCCESS'}, 200
@@ -190,7 +214,7 @@ class Comment(Resource):
 class Comments(Resource):
     def post(self):
         c_dao = CommentDao()
-        c_dao.insert_many('boards')
+        c_dao.insert_many('comments')
 
     def get(self, id):
         data = CommentDao.find_by_boardid(id)
