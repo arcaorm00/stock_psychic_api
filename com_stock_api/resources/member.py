@@ -464,6 +464,8 @@ class MemberDto(db.Model):
     exited: int = db.Column(db.Integer, nullable=False, default=0)
 
     tradings = db.relationship('TradingDto', back_populates='member', lazy='dynamic')
+    boards = db.relationship('BoardDto', back_populates='member', lazy='dynamic')
+    comments = db.relationship('CommentDto', back_populates='member', lazy='dynamic')
 
     def __init__(self, email, password, name, profile, geography, gender, age, tenure, stock_qty, balance, has_credit, credit_score, is_active_member, estimated_salary, role, probability_churn, exited):
         self.email = email
@@ -592,23 +594,28 @@ class MemberDao(MemberDto):
         session.commit()
         session.close()
     
-    @classmethod
-    def update(cls, member):
-        print('MemberDao UPDATE COPY THAT!')
-        service = MemberPro()
+    @staticmethod
+    def update(member):
         Session = openSession()
         session = Session()
-        member = cls.query.filter(cls.email.like(member.email)).update({'password': member.password, 'name': member.name, 'profile': member.profile, 'geography': member.geography, 
-        'gender': member.gender, 'age': member.age, 'tenure': member.tenure, 'stock_qty': member.stock_qty, 'balance': member.balance,
-        'has_credit': member.has_credit, 'credit_score': member.credit_score, 'is_active_member': member.is_active_member,
-        'estimated_salary': member.estimated_salary, 'role': member.role, 'probability_churn': member.probability_churn, 'exited': member.exited}).where(cls.email.like(member.email))
+        member = session.query(MemberDto)\
+        .filter(MemberDto.email==member.email)\
+        .update({MemberDto.password: member['password'], MemberDto.name: member['name'], MemberDto.profile: member['profile'], MemberDto.geography: member['geography'],
+        MemberDto.gender: member['gender'], MemberDto.age: member['age'], MemberDto.tenure: member['tenure'], MemberDto.stock_qty: member['stock_qty'], MemberDto.balance: member['balance'],
+        MemberDto.has_credit: member['has_credit'], MemberDto.credit_score: member['credit_score'], MemberDto.is_active_member: member['is_active_member'], MemberDto.estimated_salary: member['estimated_salary'],
+        MemberDto.role: member['role'], MemberDto.probability_churn: member['probability_churn'], MemberDto.exited: member['exited']})
         session.commit()
+        session.close()
     
     @classmethod
     def delete(cls, email):
+        # join = db.session.query(CommentDto).join(MemberDto, MemberDto.email==CommentDto.email).filter(CommentDto.email == email)
+        # print(f'JOIN: {join}')
         data = cls.query.get(email)
         db.session.delete(data)
         db.session.commit()
+        db.session.close()
+
 
 
 
@@ -829,11 +836,9 @@ class Member(Resource):
     
     @staticmethod
     def put(email: str):
-        print('member update!')
         args = parser.parse_args()
         print(f'Member {args} updated')
         try:
-            print('inner try')
             MemberDao.update(args)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
@@ -841,10 +846,14 @@ class Member(Resource):
             return {'message': 'Member not found'}, 404
     
     @staticmethod
-    def delete():
-        args = parser.parse_args()
-        print(f'Member {args["email"]} deleted')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+    def delete(email: str):
+        print('member delete')
+        try:
+            MemberDao.delete(email)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Member not found'}, 404
 
 class Members(Resource):
 

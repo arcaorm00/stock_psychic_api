@@ -113,6 +113,7 @@ class BoardDto(db.Model):
     content: str = db.Column(db.String(20000), nullable=False)
     regdate: datetime = db.Column(db.String(1000), default=datetime.datetime.now())
 
+    member = db.relationship('MemberDto', back_populates='boards')
     comments = db.relationship('CommentDto', back_populates='board', lazy='dynamic')
 
     def __init__(self, email, article_type, title, content, regdate):
@@ -180,7 +181,9 @@ class BoardDao(BoardDto):
 
     @classmethod
     def find_by_member(cls, email):
-        return cls.query.filter(cls.email.like(email)).all()
+        sql = cls.query.filter(cls.email.like(email))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
 
     @staticmethod
     def save(board):
@@ -200,17 +203,21 @@ class BoardDao(BoardDto):
     
     @classmethod
     def modify_board(cls, board):
-        service = BoardPro()
         Session = openSession()
         session = Session()
-        board = session.query.filter(cls.id.like(board.id)).update({'title': board.title, 'content': board.content})
+        board = session.query(BoardDto)\
+        .filter(BoardDto.email==board.email)\
+        .update({BoardDto.title: board['title'], BoardDto.content: board['content']})
         session.commit()
+        session.close()
 
     @classmethod
     def delete_board(cls, id):
+        # 트랜잭션 필요
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
+        db.session.close()
 
 
 
@@ -257,16 +264,24 @@ class Board(Resource):
             return {'message': 'Board not found'}, 404
 
     @staticmethod
-    def update():
+    def put(id):
         args = parser.parse_args()
-        print(f'Board {args["id"]} updated')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+        print(f'Board {args} updated')
+        try:
+            BoardDao.modify_board(args)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Board not found'}, 404
    
     @staticmethod
-    def delete():
-        args = parser.parse_args()
-        print(f'Board {args["id"]} deleted')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+    def delete(id):
+        try:
+            BoardDao.delete(id)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Board not found'}, 404
     
 class Boards(Resource):
     

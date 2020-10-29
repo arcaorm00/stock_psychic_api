@@ -50,6 +50,8 @@ class TradingDto(db.Model):
     trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
 
     member = db.relationship('MemberDto', back_populates='tradings')
+    yhfinence = db.relationship('YHFinanceDto', back_populates='tradings')
+    naver_finance = db.relationship('StockDto', back_populates='tradings')
 
     def __init__(self, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
         self.email = email
@@ -101,14 +103,14 @@ class TradingDao(TradingDto):
 
     @classmethod
     def find_by_id(cls, trading):
-        sql = cls.query.filter_by(cls.id.like(trading.id))
+        sql = cls.query.filter_by(cls.id == trading.id)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @classmethod
     def find_by_email(cls, trading):
-        sql = cls.query.filter_by(cls.email.like(trading.email))
+        sql = cls.query.filter_by(cls.email==trading.email)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -120,14 +122,20 @@ class TradingDao(TradingDto):
 
     @staticmethod
     def modify_trading(trading):
-        db.session.add(trading)
-        db.session.commit()
+        Session = openSession()
+        session = Session()
+        trading = session.query(TradingDto)\
+        .filter(TradingDto.id==trading.id)\
+        .update({TradingDto.stock_qty: trading['stock_qty'], TradingDto.price: trading['price'], TradingDto.trading_date: trading['trading_date']})
+        session.commit()
+        session.close()
 
     @classmethod
     def delete_trading(cls, id):
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
+        db.session.close()
 
 
 
@@ -173,14 +181,23 @@ class Trading(Resource):
             return {'message': 'Trading not found'}, 404
 
     def put(self, id):
-        data = self.parser.parse_args()
-        trading = TradingDao.find_by_id(id)
+        args = parser.parse_args()
+        print(f'Trading {args} updated')
+        try:
+            TradingDao.update(args)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Trading not found'}, 404
 
-        trading.stock_qty = data['stock_qty']
-        trading.price = data['price']
-        trading.trading_date = data['trading_date']
-        trading.save()
-        return trading.json()
+    @staticmethod
+    def delete(id):
+        try:
+            TradingDao.delete(id)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Trading not found'}, 404
 
 class Tradings(Resource):
 

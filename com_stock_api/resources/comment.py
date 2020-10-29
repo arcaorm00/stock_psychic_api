@@ -1,4 +1,4 @@
-from com_stock_api.ext.db import db
+from com_stock_api.ext.db import db, openSession
 from com_stock_api.resources.board import BoardDto
 from com_stock_api.resources.member import MemberDto
 import datetime
@@ -52,6 +52,7 @@ class CommentDto(db.Model):
     comment_step: int = db.Column(db.Integer, nullable=False)
 
     board = db.relationship('BoardDto', back_populates='comments')
+    member = db.relationship('MemberDto', back_populates='comments')
 
     def __init__(self, board_id, email, comment, regdate, comment_ref, comment_level, comment_step):
         self.board_id = board_id
@@ -144,14 +145,20 @@ class CommentDao(CommentDto):
 
     @staticmethod
     def modify_comment(comment):
-        db.session.add(comment)
-        db.session.commit()
+        Session = openSession()
+        session = Session()
+        member = session.query(CommentDto)\
+        .filter(CommentDto.email == comment.email)\
+        .update({CommentDto.comment: comment['comment']})
+        session.commit()
+        session.close()
 
     @classmethod
     def delete_comment(cls, id):
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
+        db.session.close()
 
 
 
@@ -200,16 +207,24 @@ class Comment(Resource):
             return {'message': 'Comment not found'}, 404
 
     @staticmethod
-    def update():
+    def update(id):
         args = request.get_json()
         print(f'Comment {args["id"]} updated')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+        try:
+            CommentDao.update(args)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Comment not found'}, 404
    
     @staticmethod
     def delete(id):
-        args = parser.parse_args()
-        print(f'Comment {args["id"]} deleted')
-        return {'code': 0, 'message': 'SUCCESS'}, 200
+        try:
+            CommentDao.delete(id)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Comment not found'}, 404
     
 class Comments(Resource):
     def post(self):
