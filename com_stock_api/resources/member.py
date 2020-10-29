@@ -592,11 +592,17 @@ class MemberDao(MemberDto):
         session.commit()
         session.close()
     
-    @staticmethod
-    def update(member):
+    @classmethod
+    def update(cls, member):
         print('MemberDao UPDATE COPY THAT!')
-        db.session.add(member)
-        db.session.commit()
+        service = MemberPro()
+        Session = openSession()
+        session = Session()
+        member = cls.query.filter(cls.email.like(member.email)).update({'password': member.password, 'name': member.name, 'profile': member.profile, 'geography': member.geography, 
+        'gender': member.gender, 'age': member.age, 'tenure': member.tenure, 'stock_qty': member.stock_qty, 'balance': member.balance,
+        'has_credit': member.has_credit, 'credit_score': member.credit_score, 'is_active_member': member.is_active_member,
+        'estimated_salary': member.estimated_salary, 'role': member.role, 'probability_churn': member.probability_churn, 'exited': member.exited}).where(cls.email.like(member.email))
+        session.commit()
     
     @classmethod
     def delete(cls, email):

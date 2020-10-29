@@ -180,7 +180,7 @@ class BoardDao(BoardDto):
 
     @classmethod
     def find_by_member(cls, email):
-        return cls.query.filter_by(email == email).all()
+        return cls.query.filter(cls.email.like(email)).all()
 
     @staticmethod
     def save(board):
