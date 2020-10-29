@@ -18,6 +18,79 @@ from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 
+
+
+# =====================================================================
+# =====================================================================
+# ===================      preprocessing      =========================
+# =====================================================================
+# =====================================================================
+
+
+
+
+
+class BoardPro:
+
+    def __init__(self):
+        # print(f'basedir: {basedir}')
+        self.reader = FileReader()
+        self.datapath = os.path.abspath(os.path.dirname(__file__))
+
+    def process(self):
+        file_data = self.get_data()
+        data = self.refine_data(file_data)
+        # self.save_data(data)
+        return data
+
+    def get_data(self):
+        self.reader.context = os.path.join(self.datapath, 'data')
+        self.reader.fname = 'kyobo_notice.csv'
+        notice_file = self.reader.csv_to_dframe()
+        # print(notice_file)
+        return notice_file
+    
+    @staticmethod
+    def refine_data(data):
+        # 컬럼명 변경
+        data = data.rename({'제목': 'title', '내용': 'content', '작성일자': 'regdate'}, axis='columns')
+        data = data.sort_values(by=['regdate'], axis=0)
+        data['email'] = 'admin@stockpsychic.com'
+        data['article_type'] = 'Notice'
+        data = data.drop('url', axis=1)
+
+        # print(data['content'][1])
+        for idx in range(len(data['content'])):
+            con = re.sub('<!--(.+?)-->', '', str(data['content'][idx]))
+            con = con.replace('<!--', '')
+            con = con.replace('교보증권', 'Stock Psychic')
+            con = con.replace('\r', '\n')
+            data['content'][idx] = con
+        # data['regdate'] = ['20'+ regdate for regdate in data['regdate']]
+
+        print(data)
+        return data
+
+    def save_data(self, data):
+        self.reader.context = os.path.join(self.datapath, 'saved_data')
+        self.reader.fname = 'kyobo_notice_database.csv'
+        data.to_csv(self.reader.new_file(), index=False)
+        print('file saved')
+
+
+
+
+
+# =====================================================================
+# =====================================================================
+# ===================        modeling         =========================
+# =====================================================================
+# =====================================================================
+
+
+
+
+
 class BoardDto(db.Model):
 
     __tablename__ = 'boards'
@@ -68,6 +141,9 @@ class BoardVo:
     title: str = ''
     content: str = ''
     regdate: datetime = datetime.datetime.now()
+
+
+
 
 
 
@@ -127,71 +203,10 @@ class BoardDao(BoardDto):
 
 
 
-# =====================================================================
-# =====================================================================
-# ============================== service ==============================
-# =====================================================================
-# =====================================================================
-
-
-
-
-
-class BoardPro:
-
-    def __init__(self):
-        # print(f'basedir: {basedir}')
-        self.reader = FileReader()
-        self.datapath = os.path.abspath(os.path.dirname(__file__))
-
-    def process(self):
-        file_data = self.get_data()
-        data = self.refine_data(file_data)
-        # self.save_data(data)
-        return data
-
-    def get_data(self):
-        self.reader.context = os.path.join(self.datapath, 'data')
-        self.reader.fname = 'kyobo_notice.csv'
-        notice_file = self.reader.csv_to_dframe()
-        # print(notice_file)
-        return notice_file
-    
-    @staticmethod
-    def refine_data(data):
-        # 컬럼명 변경
-        data = data.rename({'제목': 'title', '내용': 'content', '작성일자': 'regdate'}, axis='columns')
-        data = data.sort_values(by=['regdate'], axis=0)
-        data['email'] = 'admin@stockpsychic.com'
-        data['article_type'] = 'Notice'
-        data = data.drop('url', axis=1)
-
-        # print(data['content'][1])
-        for idx in range(len(data['content'])):
-            con = re.sub('<!--(.+?)-->', '', str(data['content'][idx]))
-            con = con.replace('<!--', '')
-            con = con.replace('교보증권', 'Stock Psychic')
-            con = con.replace('\r', '\n')
-            data['content'][idx] = con
-        # data['regdate'] = ['20'+ regdate for regdate in data['regdate']]
-
-        print(data)
-        return data
-
-    def save_data(self, data):
-        self.reader.context = os.path.join(self.datapath, 'saved_data')
-        self.reader.fname = 'kyobo_notice_database.csv'
-        data.to_csv(self.reader.new_file(), index=False)
-        print('file saved')
-
-
-
-
-
 
 # =====================================================================
 # =====================================================================
-# ============================ controller =============================
+# ===================        controller       =========================
 # =====================================================================
 # =====================================================================
 
@@ -212,7 +227,6 @@ class Board(Resource):
     
     @staticmethod
     def post(id):
-        print('여 기 온 다 네')
         # args = parser.parse_args()
         # print(f'Board {args["id"]} added')
         # params = json.loads(request.get_data(), encoding='utf-8')
