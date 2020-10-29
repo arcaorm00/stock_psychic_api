@@ -737,6 +737,7 @@ class MemberChurnPredModel(object):
         print(f'self.validation_data: \n{(self.x_validation, self.y_validation)}')
         print(f'self.test_data: \n{(self.x_test, self.y_test)}')
 
+
     # ==================================================================
     # ===========================    확률    ===========================
     # ==================================================================
