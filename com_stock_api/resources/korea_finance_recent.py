@@ -93,7 +93,7 @@ class KoreaStock():
 #     print(df_result)
     
     
-class StockRecentDto(db.Model):
+class StockDto(db.Model):
     
     __tablename__ = 'korea_recent_finance'
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
@@ -151,7 +151,7 @@ session= Session()
 
 
 
-class RecentStockDao(StockRecentDto):
+class RecentStockDao(StockDto):
 
     # def __init__(self):
     #     self.data = os.path.abspath(__file__+"/.."+"/data/")
@@ -167,13 +167,13 @@ class RecentStockDao(StockRecentDto):
             #path = self.data
             #df = pd.read_csv(path +'/lgchem.csv',encoding='utf-8',dtype=str)
             print(df.head())
-            session.bulk_insert_mappings(StockRecentDto, df.to_dict(orient='records'))
+            session.bulk_insert_mappings(StockDto, df.to_dict(orient='records'))
             session.commit()
         session.close()
     
     @staticmethod
     def count():
-        return session.query(func.count(StockRecentDto.id)).one()
+        return session.query(func.count(StockDto.id)).one()
 
     @staticmethod
     def save(stock):
@@ -306,8 +306,8 @@ class Auth(Resource):
     @staticmethod
     def post():
         body = request.get_json()
-        stock = StockRecentDto(**body)
-        StockRecentDto.save(stock)
+        stock = StockDto(**body)
+        StockDto.save(stock)
         id = stock.id
 
         return {'id': str(id)}, 200

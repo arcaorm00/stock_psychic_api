@@ -135,8 +135,6 @@ class StockDto(db.Model):
     low :int = db.Column(db.String(30))
     volume : int = db.Column(db.String(30))
     ticker : str = db.Column(db.String(30))
-
-    # tradings = db.relationship('TradingDto', back_populates='korea_finance', lazy='dynamic')
   
     def __init__(self,id,date, open, close, high, low, volume, ticker):
         self.id = id
