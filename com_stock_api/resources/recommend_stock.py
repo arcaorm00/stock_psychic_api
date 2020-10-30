@@ -90,7 +90,7 @@ class RecommendStockDao(RecommendStockDto):
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
-        session.close()
+        db.session.close()
 
 
 
