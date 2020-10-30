@@ -1,4 +1,4 @@
-from com_stock_api.ext.db import db
+from com_stock_api.ext.db import db, openSession
 from com_stock_api.resources.member import MemberDto
 
 import pandas as pd
@@ -17,8 +17,7 @@ class RecommendStockDto(db.Model):
     stock_type: str = db.Column(db.String(50), nullable=True)
     stock_id: int = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, id, email, stock_type, stock_id):
-        self.id = id
+    def __init__(self, email, stock_type, stock_id):
         self.email = email
         self.stock_type = stock_type
         self.stock_id = stock_id
@@ -58,14 +57,14 @@ class RecommendStockDao(RecommendStockDto):
 
     @classmethod
     def find_by_id(cls, recommend):
-        sql = cls.query.filter(cls.id.like(recommend.id))
+        sql = cls.query.filter(cls.id==recommend.id)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_by_email(cls, recommend):
-        sql = cls.query.filter(cls.email.like(recommend.email))
+        sql = cls.query.filter(cls.email == recommend.email)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -78,14 +77,20 @@ class RecommendStockDao(RecommendStockDto):
     
     @staticmethod
     def modify_recommend_stock(recommend_stock):
-        db.session.add(recommend_stock)
-        db.session.commit()
+        Session = openSession()
+        session = Session()
+        trading = session.query(RecommendStockDto)\
+        .filter(RecommendStockDto.id==recommend_stock.id)\
+        .update({RecommendStockDto.stock_type: recommend_stock['stock_type'], RecommendStockDto.stock_id: recommend_stock['stock_id']})
+        session.commit()
+        session.close()
 
     @classmethod
     def delete_recommend_stock(cls, id):
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
+        session.close()
 
 
 
@@ -101,18 +106,17 @@ class RecommendStockDao(RecommendStockDto):
 
 
 
+parser = reqparse.RequestParser()
+parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('stock_type', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('stock_id', type=str, required=True, help='This field cannot be left blank')
+
 class RecommendStock(Resource):
 
-    def __init__(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
-        parser.add_argument('email', type=str, required=True, help='This field cannot be left blank')
-        parser.add_argument('stock_type', type=str, required=True, help='This field cannot be left blank')
-        parser.add_argument('stock_id', type=str, required=True, help='This field cannot be left blank')
-
-
-    def post(self):
-        data = self.parser.parse_args()
+    @staticmethod
+    def post():
+        data = parser.parse_args()
         recommend = RecommendStockDto(data['id'], data['email'], data['stock_type'], data['stock_id'])
         try:
             recommend.save()
@@ -121,20 +125,39 @@ class RecommendStock(Resource):
         return recommend.json(), 201
     
     def get(self, id):
-        recommend = RecommendStockDao.find_by_id(id)
-        if recommend:
-            return recommend.json()
-        return {'message': 'RecommendStocks not found'}, 404
+        try:
+            recommend = RecommendStockDao.find_by_id(id)
+            if recommend:
+                return recommend.json()
+        except Exception as e:
+            return {'message': 'RecommendStocks not found'}, 404
 
-    def put(self, id):
-        data = self.parser.parse_args()
-        recommend = RecommendStockDao.find_by_id(id)
+    @staticmethod
+    def put(id):
+        args = parser.parse_args()
+        print(f'RecommendStock {args} updated')
+        try:
+            RecommendStockDao.update(args)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'RecommendStock not found'}, 404
 
-        recommend.stock_type = data['stock_type']
-        recommend.stock_id = data['stock_id']
-        recommend.save()
-        return recommend.json()
+    @staticmethod
+    def delete(id):
+        try:
+            RecommendStockDao.delete(id)
+            return {'code': 0, 'message': 'SUCCESS'}, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Trading not found'}, 404
 
 class RecommendStocks(Resource):
+
+    def post(self):
+        rs_dao = RecommendStockDao()
+        rs_dao.insert_many('recommend_stocks')
+
     def get(self):
-        return {'recommendStocks': list(map(lambda recommendStock: recommendStock.json(), RecommendStockDao.find_all()))}
+        data = RecommendStockDao.find_all()
+        return data, 200

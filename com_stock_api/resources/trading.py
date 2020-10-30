@@ -1,7 +1,7 @@
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.resources.member import MemberDto
 from com_stock_api.resources.yhfinance import YHFinanceDto
-from com_stock_api.naver_finance.dto import StockDto
+from com_stock_api.resources.korea_finance import StockDto
 import datetime
 
 import pandas as pd
@@ -50,8 +50,8 @@ class TradingDto(db.Model):
     trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
 
     member = db.relationship('MemberDto', back_populates='tradings')
-    yhfinence = db.relationship('YHFinanceDto', back_populates='tradings')
-    naver_finance = db.relationship('StockDto', back_populates='tradings')
+    yahoo_finance = db.relationship('YHFinanceDto', back_populates='tradings')
+    # korea_finance = db.relationship('StockDto', back_populates='tradings')
 
     def __init__(self, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
         self.email = email
@@ -180,7 +180,8 @@ class Trading(Resource):
             print(e)
             return {'message': 'Trading not found'}, 404
 
-    def put(self, id):
+    @staticmethod
+    def put(id):
         args = parser.parse_args()
         print(f'Trading {args} updated')
         try:

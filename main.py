@@ -3,11 +3,9 @@ from flask_restful import Api
 from com_stock_api.ext.db import url, db
 from com_stock_api.ext.routes import initialize_routes
 
-# from com_stock_api.member import member
 from com_stock_api.resources.member import MemberDao
 from com_stock_api.resources.board import BoardDao
 from com_stock_api.resources.comment import CommentDao
-# from com_stock_api.resources.member_churn_pred import MemberChurnPredDao
 from com_stock_api.resources.recommend_stock import RecommendStockDao
 from com_stock_api.resources.trading import TradingDao
 
@@ -16,10 +14,12 @@ from com_stock_api.resources.uscovid import USCovidDao
 from com_stock_api.resources.yhfinance import YHFinanceDao
 from com_stock_api.resources.investingnews import InvestingDao
 
-from com_stock_api.korea_covid.api import KoreaCovid,KoreaCovids
-from com_stock_api.kospi_pred.api import Kospi,Kospis
-from com_stock_api.naver_finance.api import Stock,Stocks
-from com_stock_api.naver_news.api import News,News_
+from com_stock_api.resources.korea_news import NewsDao
+from com_stock_api.resources.korea_covid import KoreaDao
+from com_stock_api.resources.korea_finance import StockDao
+from com_stock_api.resources.korea_finance_recent import RecentStockDao
+from com_stock_api.resources.korea_news_recent import RecentNewsDao
+from com_stock_api.resources.kospi_pred import KospiDao
 
 from flask_cors import CORS
 
@@ -73,5 +73,41 @@ with app.app_context():
     print(f'Stock news Total Count is {count}')
     if count4 == 0:
         InvestingDao.insert_many()
+
+with app.app_context():
+    news_count = NewsDao.count()
+    print(f'****** News Total Count is {news_count} *******')
+    if news_count[0] == 0:
+        #NewsDao()
+        n = NewsDao()
+        n.bulk()
+
+    covid_count = KoreaDao.count()
+    print(f'***** Covid Count is {covid_count} *******')
+    if covid_count[0] == 0:
+        #KoreaDao().bulk()
+        k = KoreaDao()
+        k.bulk()
+
+    stock_count = StockDao.count()
+    print(f'**** Stock Count is {stock_count} **********')
+    if stock_count[0] == 0:
+        #StockDao().bulk()
+        s = StockDao()
+        s.bulk()
+
+    recent_stock_count = RecentStockDao.count()
+    print(f'**** Recent Stock Count is {recent_stock_count} ****')
+    if recent_stock_count[0] == 0:
+        RecentStockDao.bulk()
+        #rs = RecentStockDao()
+        #rs.bulk()
+    
+    recent_news_count = RecentNewsDao.count()
+    print(f'******* Recent News Count is {recent_news_count}*****')
+    if recent_news_count[0] == 0:
+        RecentNewsDao.bulk()
+        #rn = RecentNewsDao()
+        #rn.bulk()
 
 initialize_routes(api)
