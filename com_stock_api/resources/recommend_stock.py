@@ -57,7 +57,7 @@ class RecommendStockDao(RecommendStockDto):
 
     @classmethod
     def find_by_id(cls, recommend):
-        sql = cls.query.filter(cls.id==recommend.id)
+        sql = cls.query.filter(cls.id == recommend.id)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))

@@ -20,7 +20,7 @@ class YHFinanceDto(db.Model):
     #date format : YYYY-MM-DD
     # amount : unit = million 
 
-    tradings = db.relationship('TradingDto', back_populates='yahoo_finance', lazy='dynamic')
+    # tradings = db.relationship('TradingDto', back_populates='yahoo_finance', lazy='dynamic')
     
     def __init__(self, ticker, date, open, high, low, close, adjclose, volume):
         self.ticker = ticker

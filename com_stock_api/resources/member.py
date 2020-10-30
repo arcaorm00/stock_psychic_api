@@ -183,7 +183,6 @@ class MemberDBDataProcessing:
 
     @staticmethod
     def estimatedSalary_ordinal(this):
-        this.train['EstimatedSalary'] = pd.qcut(this.train['EstimatedSalary'], 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
         return this
 
     # 비밀번호 추가 (1234 통일)
