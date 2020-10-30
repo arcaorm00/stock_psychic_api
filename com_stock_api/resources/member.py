@@ -132,33 +132,6 @@ class MemberDBDataProcessing:
 
     @staticmethod
     def age_ordinal(this):
-        train = this.train
-        train['Age'] = train['Age'].fillna(-0.5)
-        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf] # 범위
-        labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'YoungAdult', 'Adult', 'Senior']
-        train['AgeGroup'] = pd.cut(train['Age'], bins, labels=labels)
-        age_title_mapping = {
-            0: 'Unknown',
-            1: 'Baby', 
-            2: 'Child',
-            3: 'Teenager',
-            4: 'Student',
-            5: 'YoungAdult',
-            6: 'Adult',
-            7: 'Senior'
-        }
-        age_mapping = {
-            'Unknown': 0,
-            'Baby': 1, 
-            'Child': 2,
-            'Teenager': 3,
-            'Student': 4,
-            'YoungAdult': 5,
-            'Adult': 6,
-            'Senior': 7
-        }
-        train['AgeGroup'] = train['AgeGroup'].map(age_mapping)
-        this.train = train
         return this
 
     @staticmethod
@@ -251,7 +224,7 @@ class MemberModelingDataPreprocessing:
         this.train = members
         
         # 컬럼 삭제
-        print(this.train)
+        # print(this.train)
         this = self.drop_feature(this, 'email')
         this = self.drop_feature(this, 'password')
         this = self.drop_feature(this, 'name')
@@ -650,6 +623,7 @@ class MemberChurnPredModel(object):
         self.create_model()
         self.train_model()
         self.eval_model()
+        self.save_model()
         self.debug_model()
 
         
@@ -694,20 +668,30 @@ class MemberChurnPredModel(object):
     # 모델 훈련
     def train_model(self):
         print('********** train model **********')
-
-        self.model.fit(x=self.x_train, y=self.y_train, 
-        validation_data=(self.x_validation, self.y_validation), epochs=20, verbose=1)
+        checkpoint_path = 'member_churn_train_1/cp.ckpt'
+        cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
-        self.model.save(os.path.join(self.path, 'member_churn.h5'))
+        # self.model.fit(x=self.x_train, y=self.y_train, 
+        # validation_data=(self.x_validation, self.y_validation), epochs=20, verbose=1)
+        self.model.fit(self.x_train, self.y_train, epochs=50, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
-        print('모델 저장 완료')
-    
+        self.model.load_weights(checkpoint_path)
+
+        checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp-{epoch: 04d}.ckpt')
+        checkpoint_dir = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, verbose=1, save_weights_only=True, save_freq=5)
+        print(f'CHECKPOINT: {checkpoint_path}')
+        
+        self.model.save_weights(checkpoint_path.format(epoch=0))
+        
     # 모델 평가
     def eval_model(self):
         print('********** eval model **********')
-        results = self.model.evaluate(x=self.x_test, y=self.y_test, verbose=2)
-        for name, value in zip(self.model.metrics_names, results):
-            print('%s: %.3f' % (name, value))
+
+        loss, acc = self.model.evaluate(x=self.x_test, y=self.y_test, verbose=2)
+        print('Accuracy of Model: {:5.2f}%'.format(100 * acc))
+
+    def save_model(self):
+        self.model.save(os.path.join(self.path, 'member_churn.h5'))
  
     # 모델 디버깅
     def debug_model(self):
@@ -717,12 +701,18 @@ class MemberChurnPredModel(object):
 
 
 
+
+
+
 # member
 # =====================================================================
 # =====================================================================
 # =====================      service       ============================
 # =====================================================================
 # =====================================================================
+
+
+
 
 # member에 post가 있을 때마다 수행해서 나온 값을 해당 멤버 proba_churn 컬럼에 넣어줘야 함
 class MemberChurnPredService(object):
@@ -743,9 +733,9 @@ class MemberChurnPredService(object):
     probability_churn: float = 0
 
     def assign(self, member):
-        modeling_data_process = MemberModelingDataPreprocessing()
-        member = modeling_data_process.hook_process(member)
-        print(f'member 이탈 service의 assign 정제 후!!! ==> {member}')
+        # modeling_data_process = MemberModelingDataPreprocessing()
+        # member = modeling_data_process.hook_process(member)
+        # print(f'member 이탈 service의 assign 정제 후!!! ==> {member}')
         self.geography = member.geography
         self.gender = member.gender
         self.tenure = member.tenure
@@ -760,14 +750,20 @@ class MemberChurnPredService(object):
     def predict(self):
         new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
         new_model.summary()
+
+        # model_partial = tf.keras.Model(inputs=new_model.input)
+        # model_partial.summary()
+
+        # data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
+        #  self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup],]
         data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
-         self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup],]
-        print(f'predict data: \n {data}')
+         self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup], ]
+        data = np.array(data, dtype = np.float32)
+        # print(f'predict data: \n {data}')
+
         pred = new_model.predict(data)
 
         return pred
-
-
 
 if __name__ == "__main__":
     mcp = MemberChurnPredModel()
@@ -871,6 +867,18 @@ class Auth(Resource):
         print(f'body: {body}')
         member = MemberDto(**body)
         MemberDao.save(member)
+
+
+        members = pd.read_sql_table('members', engine.connect())
+        mmdp = MemberModelingDataPreprocessing()
+        refined_members = mmdp.hook_process(members)
+        print(f'REFINED MEMBERS: {refined_members.head()}')
+
+        for idx, member in refined_members.iterrows():
+            mcp = MemberChurnPredService()
+            mcp.assign(member)
+            prediction = mcp.predict()
+            print(f'PREDICTION: {prediction}')
 
         email = member.email
         return {'email': str(email)}, 200

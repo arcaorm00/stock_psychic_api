@@ -45,9 +45,9 @@ class TradingPro:
     '''
     이 클래스가 해야할 일
         1) yahoo_finance와 korea_finance 테이블의 정보 중 date가 2020으로 시작하는 high와 low 사이의 금액을 랜덤으로 구한다. (tradings: price)
-        2) 해당 date는 tradings의 trading_date가 된다. (tradings: trading_date) 시간은 랜덤 값으로 지정.
+        2) 해당 date는 tradings의 trading_date가 된다. (tradings: trading_date)
         3) yahoo_finance의 종목을 거래했다면 NASDAQ, korea_finance의 종목을 거래했다면 KOSPI (tradings: stock_type)
-        4) 회원의 balance / price 값의 round()가 보유주의 수 (tradings: stock_qty)
+        4) 회원의 balance / price 값의 소수점 버림이 보유주의 수 (tradings: stock_qty)
         5) 회원의 stock_qty 만큼 새로운 종목을 거래해야 함 (ex. 회원 stock_qty가 2라면 TSLA와 LG화학)
         !!! yahoo finance와 korea finance의 환율이 다르다! 달러 기준으로 변경해서 계산해야함 !!!
     '''
@@ -67,10 +67,6 @@ class TradingPro:
         kospis = pd.read_sql_table('korea_finance', engine.connect())
         nasdaqs = pd.read_sql_table('yahoo_finance', engine.connect())
 
-        # print(f'MEMBERS TABLE: {members.head()}')
-        # print(f'KOSPI TABLE: {kospis.head()}')
-        # print(f'NASDAQ TABLE: {nasdaqs.head()}')
-
         '''
         MEMBERS TABLE:                 email password      name      profile geography  gender  ...  credit_score  is_active_member  estimated_salary       role  probability_churn  exited
         0  15565701@gmail.com     1234     Ferri  noimage.png     Spain  Female  ...           698                 0           90212.4  ROLE_USER               -1.0       0     
@@ -78,7 +74,6 @@ class TradingPro:
         2  15565714@gmail.com     1234  Cattaneo  noimage.png    France    Male  ...           601                 1           96518.0  ROLE_USER               -1.0       0     
         3  15565779@gmail.com     1234      Kent  noimage.png   Germany  Female  ...           627                 0          188258.0  ROLE_USER               -1.0       0     
         4  15565796@gmail.com     1234  Docherty  noimage.png   Germany    Male  ...           745                 0           74510.6  ROLE_USER               -1.0       0     
-
         [5 rows x 17 columns]
         KOSPI TABLE:    id       date    open   close    high     low  volume  ticker
         0   1 2020-10-16  633000  640000  643000  628000  309530  051910
@@ -93,13 +88,12 @@ class TradingPro:
         3   4   AAPL 2020-01-07  74.9600  75.225  74.3700  74.5975   74.0864  108872000
         4   5   AAPL 2020-01-08  74.2900  76.110  74.2900  75.7975   75.2782  132079200
         '''
-
+        
         # kospi의 금액을 모두 20201030 현재 환율 1129.16으로 나눔
         kospis['open'] = [round(float(k)/1129.16, 4) for k in kospis['open']]
         kospis['close'] = [round(float(k)/1129.16, 4) for k in kospis['close']]
         kospis['high'] = [round(float(k)/1129.16, 4) for k in kospis['high']]
         kospis['low'] = [round(float(k)/1129.16, 4) for k in kospis['low']]
-        # print(f'KOSPI EDITED TABLE: {kospis.head()}')
 
         self.members = members
         self.kospis = kospis
@@ -130,7 +124,7 @@ class TradingPro:
             
             # tickers의 값 중 회원의 stock_qty 수만큼 랜덤 추출
             random_ticker = random.choices(tickers, k=members_trading_qty)
-            # print(random_ticker)
+
             for tick in random_ticker:
                 email = member['email']
                 stock_ticker = tick
@@ -141,34 +135,24 @@ class TradingPro:
                 if (self.nasdaqs['ticker'] == tick).any():
                     stock_type = 'NASDAQ'
                     nasdaq = self.nasdaqs[self.nasdaqs['ticker'] == tick]
-                    # print(nasdaq['date'])
+
                     trading_date = random.choice(self.nasdaqs['date'])
                     high = float(nasdaq[nasdaq['date'] == trading_date]['high'])
                     low = float(nasdaq[nasdaq['date'] == trading_date]['low'])
-                    # print(f'high: {high}, low: {low}')
                     price = round(random.uniform(high, low), 4)
-                    # print(f'email: {email}')
-                    # print(f'price: {price}')
-                    # print(f'trading_date: {trading_date}')
 
                     stock_qty = (float(member['balance'])/members_trading_qty)/price
-                    # print(f'trading_date: {stock_qty}')
 
                 if (self.kospis['ticker'] == tick).any():
                     stock_type = 'KOSPI'
                     kospi = self.kospis[self.kospis['ticker'] == tick]
-                    # print(kospi['date'])
+
                     trading_date = random.choice(self.kospis['date'])
                     high = float(kospi[kospi['date'] == trading_date]['high'])
                     low = float(kospi[kospi['date'] == trading_date]['low'])
-                    # print(f'high: {high}, low: {low}')
                     price = round(random.uniform(high, low), 4)
-                    # print(f'email: {email}')
-                    # print(f'price: {price}')
-                    # print(f'trading_date: {trading_date}')
 
                     stock_qty = int((float(member['balance'])/members_trading_qty)/price)
-                    # print(f'trading_date: {stock_qty}')
                 
                 result = {'email': email, 'stock_type': stock_type, 'stock_ticker': stock_ticker, 'stock_qty': int(stock_qty), 'price': price, 'trading_date': str(trading_date)}
                 trading_arr.append(result)
