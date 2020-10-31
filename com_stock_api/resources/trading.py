@@ -25,6 +25,9 @@ import random
  * @ author 곽아름
  * @ special reference libraries
  *     flask_restful
+ * @ 수정일         수정자                      수정내용
+ *   ------------------------------------------------------------------------
+ *   2020.10.31     곽아름      데이터베이스에 insert할 자동 매수 class 추가
 ''' 
 
 

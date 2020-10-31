@@ -733,8 +733,8 @@ class MemberChurnPredService(object):
     probability_churn: float = 0
 
     def assign(self, member):
-        # modeling_data_process = MemberModelingDataPreprocessing()
-        # member = modeling_data_process.hook_process(member)
+        modeling_data_process = MemberModelingDataPreprocessing()
+        member = modeling_data_process.hook_process(member)
         # print(f'member 이탈 service의 assign 정제 후!!! ==> {member}')
         self.geography = member.geography
         self.gender = member.gender
