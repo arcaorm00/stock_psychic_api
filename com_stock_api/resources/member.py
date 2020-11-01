@@ -233,7 +233,10 @@ class MemberModelingDataPreprocessing:
             this.train = pd.DataFrame([_data])
             members_data = pd.read_sql_table('members', engine.connect())
             this.train = pd.concat([members_data, this.train], ignore_index=True)
-            print(this.train)          
+
+        # isAdmin = this.train['email'] == 'admin@stockpsychic.com'
+        # this.train = this.train[~isAdmin]
+        print(this.train)
         
         # 컬럼 삭제
         # print(this.train)
@@ -265,6 +268,7 @@ class MemberModelingDataPreprocessing:
 
         if self.isNewMember:
             this.train = this.train.tail(1)
+            this.train.index = [0]
             print(f'EVERYTHING IS DONE: \n{this.train}')
 
         return this.train
@@ -342,40 +346,36 @@ class MemberModelingDataPreprocessing:
 
     # @staticmethod
     def age_ordinal(self, this):
-
         train = this.train
-        print(f'age_ordinal\n {train}')
-        print(f'마지막 회원 age type : {train.tail(1)["age"]}')
-        print(f'첫번째 회원 age type : {train.head(1)["age"]}')
         train['age'] = train['age'].fillna(-0.5)
-        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf] # 범위
-        labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'YoungAdult', 'Adult', 'Senior']
+        bins = [-1, 18, 25, 30, 35, 40, 45, 50, 60, np.inf] # 범위
+        labels = ['Unknown', 'Youth', 'YoungAdult', 'Thirties', 'LateThirties', 'Forties', 'LateForties', 'AtferFifties', 'Senior']
         train['AgeGroup'] = pd.cut(train['age'], bins, labels=labels)
         age_title_mapping = {
             0: 'Unknown',
-            1: 'Baby', 
-            2: 'Child',
-            3: 'Teenager',
-            4: 'Student',
-            5: 'YoungAdult',
-            6: 'Adult',
-            7: 'Senior'
+            1: 'Youth', 
+            2: 'YoungAdult',
+            3: 'Thirties',
+            4: 'LateThirties',
+            5: 'Forties',
+            6: 'LateForties',
+            7: 'AtferFifties',
+            8: 'Senior'
         }
         age_mapping = {
             'Unknown': 0,
-            'Baby': 1, 
-            'Child': 2,
-            'Teenager': 3,
-            'Student': 4,
-            'YoungAdult': 5,
-            'Adult': 6,
-            'Senior': 7
+            'Youth': 1, 
+            'YoungAdult': 2,
+            'Thirties': 3,
+            'LateThirties': 4,
+            'Forties': 5,
+            'LateForties': 6,
+            'AtferFifties': 7,
+            'Senior': 8
         }
         train['AgeGroup'] = train['AgeGroup'].map(age_mapping)
-        if self.isNewMember:
-            train = train.tail(1)
+
         this.train = train
-        print(f'AFTER AGE: {this.train}')
         return this
 
     @staticmethod
@@ -760,19 +760,31 @@ class MemberChurnPredService(object):
     probability_churn: float = 0
 
     def assign(self, member):
-        modeling_data_process = MemberModelingDataPreprocessing()
-        member = modeling_data_process.hook_process(member)
-        # print(f'member 이탈 service의 assign 정제 후!!! ==> {member}')
-        self.geography = member.geography
-        self.gender = member.gender
-        self.tenure = member.tenure
-        self.stock_qty = member.stock_qty
-        self.balance = member.balance
-        self.has_credit = member.has_credit
-        self.credit_score = member.credit_score
-        self.is_active_member = member.is_active_member
-        self.estimated_salary = member.estimated_salary
-        self.AgeGroup = member.AgeGroup
+
+        mmdp = MemberModelingDataPreprocessing()
+        refined_member = mmdp.hook_process(member)
+        print(f'REFINED MEMBERS: {refined_member}')
+    
+        # self.geography = member.geography
+        # self.gender = member.gender
+        # self.tenure = member.tenure
+        # self.stock_qty = member.stock_qty
+        # self.balance = member.balance
+        # self.has_credit = member.has_credit
+        # self.credit_score = member.credit_score
+        # self.is_active_member = member.is_active_member
+        # self.estimated_salary = member.estimated_salary
+        # self.AgeGroup = member.AgeGroup
+        self.geography = refined_member['geography'][0]
+        self.gender = refined_member['gender'][0]
+        self.tenure = refined_member['tenure'][0]
+        self.stock_qty = refined_member['stock_qty'][0]
+        self.balance = refined_member['balance'][0]
+        self.has_credit = refined_member['has_credit'][0]
+        self.credit_score = refined_member['credit_score'][0]
+        self.is_active_member = refined_member['is_active_member'][0]
+        self.estimated_salary = refined_member['estimated_salary'][0]
+        self.AgeGroup = refined_member['AgeGroup'][0]
 
     def predict(self):
         new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
@@ -785,8 +797,9 @@ class MemberChurnPredService(object):
         #  self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup],]
         data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
          self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup], ]
+        print(f'predict data: \n {data}')
         data = np.array(data, dtype = np.float32)
-        # print(f'predict data: \n {data}')
+        
 
         pred = new_model.predict(data)
 
@@ -893,19 +906,16 @@ class Auth(Resource):
         body = request.get_json()
         print(f'body: {body}')
         member = MemberDto(**body)
-        # MemberDao.save(member)
 
+        mcp = MemberChurnPredService()
+        mcp.assign(member)
+        prediction = mcp.predict()
+        
+        prediction = round(prediction[0, 0], 5)
+        print(f'PREDICTION: {prediction}')
+        member.probability_churn = float(prediction)
 
-        # members = pd.read_sql_table('members', engine.connect())
-        mmdp = MemberModelingDataPreprocessing()
-        refined_member = mmdp.hook_process(member)
-        print(f'REFINED MEMBERS: {refined_member}')
-
-        # for idx, member in refined_members.iterrows():
-        #     mcp = MemberChurnPredService()
-        #     mcp.assign(member)
-        #     prediction = mcp.predict()
-        #     print(f'PREDICTION: {prediction}')
+        MemberDao.save(member)
 
         email = member.email
         return {'email': str(email)}, 200
