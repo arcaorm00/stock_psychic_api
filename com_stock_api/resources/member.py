@@ -596,20 +596,20 @@ class MemberDao(MemberDto):
         session.commit()
         session.close()
 
-        members = pd.read_sql_table('members', engine.connect())
-        for idx, member in members.iterrows():
-            m = dict(member)
-            print(type(m))
-            member = MemberDto(m['email'], m['password'], m['name'], m['profile'], m['geography'], m['gender'], m['age'], m['tenure'], m['stock_qty'], 
-            m['balance'], m['has_credit'], m['credit_score'], m['is_active_member'], m['estimated_salary'], m['role'], m['probability_churn'], m['exited'])
-            mcp = MemberChurnPredService()
-            mcp.assign(member)
-            # mcp.assign(member.to_frame().T)
-            prediction = mcp.predict()
+        # members = pd.read_sql_table('members', engine.connect())
+        # for idx, member in members.iterrows():
+        #     m = dict(member)
+        #     print(type(m))
+        #     member = MemberDto(m['email'], m['password'], m['name'], m['profile'], m['geography'], m['gender'], m['age'], m['tenure'], m['stock_qty'], 
+        #     m['balance'], m['has_credit'], m['credit_score'], m['is_active_member'], m['estimated_salary'], m['role'], m['probability_churn'], m['exited'])
+        #     mcp = MemberChurnPredService()
+        #     mcp.assign(member)
+        #     # mcp.assign(member.to_frame().T)
+        #     prediction = mcp.predict()
 
-            prediction = round(prediction[0, 0], 5)
-            print(f'PREDICTION: {prediction}')
-            member['probability_churn'] = float(prediction)
+        #     prediction = round(prediction[0, 0], 5)
+        #     print(f'PREDICTION: {prediction}')
+        #     member.probability_churn = float(prediction)
         
     
     @staticmethod
@@ -714,7 +714,7 @@ class MemberChurnPredModel(object):
     # 모델 훈련
     def train_model(self):
         print('********** train model **********')
-        checkpoint_path = 'member_churn_train/cp.ckpt'
+        checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
         # self.model.fit(x=self.x_train, y=self.y_train, 
