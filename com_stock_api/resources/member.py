@@ -533,6 +533,9 @@ class MemberVo:
 
 
 
+Session = openSession()
+session = Session()
+
 class MemberDao(MemberDto):
 
     def __init__(self):
@@ -540,7 +543,7 @@ class MemberDao(MemberDto):
     
     @classmethod
     def count(cls):
-        return cls.query.count()
+        return session.query(func.count(MemberDto.id)).one()
 
     @classmethod
     def find_all(cls):

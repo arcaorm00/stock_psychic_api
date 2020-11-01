@@ -13,6 +13,7 @@ from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 import random
+from sqlalchemy import func
 
 
 
@@ -237,7 +238,8 @@ class TradingVo:
 
 
 
-
+Session = openSession()
+session = Session()
 
 class TradingDao(TradingDto):
 
@@ -246,7 +248,7 @@ class TradingDao(TradingDto):
 
     @classmethod
     def count(cls):
-        return cls.query.count()
+        return session.query(func.count(TradingDto.id)).one()
 
     @classmethod
     def find_all(cls):

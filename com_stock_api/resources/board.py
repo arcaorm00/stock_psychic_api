@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 import datetime
 from com_stock_api.resources.member import MemberDto
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 import pandas as pd
 import json
 
@@ -159,13 +159,14 @@ class BoardVo:
 
 
 
-
+Session = openSession()
+session = Session()
 
 class BoardDao(BoardDto):
 
     @classmethod
     def count(cls):
-        return cls.query.count()
+        return session.query(func.count(BoardDto.id)).one()
 
     @classmethod
     def find_all(cls):
