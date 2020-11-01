@@ -39,6 +39,9 @@ from sklearn.linear_model import LogisticRegression
  * @ author 곽아름
  * @ special reference libraries
  *     sqlalchemy, flask_restful
+ * @ 수정일         수정자                      수정내용
+ *   ------------------------------------------------------------------------
+ *   2020.11.01     곽아름      새 멤버 insert시 이탈 확률 값 할당 로직 추가
 ''' 
 
 
