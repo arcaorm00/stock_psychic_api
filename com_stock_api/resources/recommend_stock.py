@@ -5,6 +5,7 @@ import pandas as pd
 import json
 
 from typing import List
+from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 class RecommendStockDto(db.Model):
@@ -63,8 +64,8 @@ class RecommendStockDao(RecommendStockDto):
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_email(cls, recommend):
-        sql = cls.query.filter(cls.email == recommend.email)
+    def find_by_email(cls, email):
+        sql = cls.query.filter(cls.email == email)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -115,45 +116,46 @@ parser.add_argument('stock_id', type=str, required=True, help='This field cannot
 class RecommendStock(Resource):
 
     @staticmethod
-    def post():
-        data = parser.parse_args()
-        recommend = RecommendStockDto(data['id'], data['email'], data['stock_type'], data['stock_id'])
-        try:
-            recommend.save()
-        except:
-            return {'message': 'An error occured inserting the RecommendStocks'}, 500
-        return recommend.json(), 201
+    def post(id):
+        body = request.get_json()
+        print(f'body: {body}')
+        recomm_stock = RecommendStockDto(**body)
+        RecommendStockDao.save(recomm_stock)
+        return {'recomm_stock': str(recomm_stock.id)}, 200
     
-    def get(self, id):
+    @staticmethod
+    def get(id):
+        args = parser.parse_args()
         try:
-            recommend = RecommendStockDao.find_by_id(id)
-            if recommend:
-                return recommend.json()
+            recomm_stock = RecommendStockDao.find_by_email(args['email'])
+            if recomm_stock:
+                return recomm_stock
         except Exception as e:
-            return {'message': 'RecommendStocks not found'}, 404
+            print(e)
+            return {'message': 'Recommend Stock not found'}, 404
 
     @staticmethod
     def put(id):
         args = parser.parse_args()
-        print(f'RecommendStock {args} updated')
+        print(f'Recommend Stock {args} updated')
         try:
-            RecommendStockDao.update(args)
+            RecommendStockDao.modify_recommend_stock(args)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)
-            return {'message': 'RecommendStock not found'}, 404
-
+            return {'message': 'Recommend Stock not found'}, 404
+   
     @staticmethod
     def delete(id):
         try:
-            RecommendStockDao.delete(id)
+            RecommendStockDao.delete_recommend_stock(id)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)
-            return {'message': 'Trading not found'}, 404
-
-class RecommendStocks(Resource):
-
+            return {'message': 'Recommend Stock not found'}, 404
+    
+class Boards(Resource):
+    
     def post(self):
         rs_dao = RecommendStockDao()
         rs_dao.insert_many('recommend_stocks')
@@ -161,3 +163,4 @@ class RecommendStocks(Resource):
     def get(self):
         data = RecommendStockDao.find_all()
         return data, 200
+

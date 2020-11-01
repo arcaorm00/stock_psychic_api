@@ -101,14 +101,13 @@ class MemberDBDataProcessing:
         'Gender': 'gender', 'Age': 'age', 'Tenure': 'tenure', 'Balance': 'balance', 'NumOfProducts': 'stock_qty', 'HasCrCard': 'has_credit', 'IsActiveMember': 'is_active_member', 
         'EstimatedSalary': 'estimated_salary', 'Password': 'password', 'Email': 'email', 'Role': 'role', 'Profile': 'profile', 'Probability_churn': 'probability_churn', 'Exited': 'exited'}, axis='columns')
 
-        print(this.train)
         return this.train
 
     def new_model(self, payload) -> object:
         this = self.fileReader
         this.context = os.path.join(self.datapath, 'data')
         this.fname = payload
-        print(f'*****{this.context + this.fname}')
+        # print(f'*****{this.context + this.fname}')
         return pd.read_csv(os.path.join(this.context, this.fname))
 
     @staticmethod
@@ -238,18 +237,14 @@ class MemberModelingDataPreprocessing:
 
         # isAdmin = this.train['email'] == 'admin@stockpsychic.com'
         # this.train = this.train[~isAdmin]
-        print(this.train)
         
         # 컬럼 삭제
-        # print(this.train)
         this = self.drop_feature(this, 'email')
         this = self.drop_feature(this, 'password')
         this = self.drop_feature(this, 'name')
         this = self.drop_feature(this, 'profile')
         this = self.drop_feature(this, 'role')
         this = self.drop_feature(this, 'probability_churn')
-
-        print(f'칼럼 삭제 후: \n {this.train}')
         
         # 데이터 정제
         this = self.geography_nominal(this)
@@ -259,8 +254,6 @@ class MemberModelingDataPreprocessing:
         this = self.creditScore_ordinal(this)
         this = self.balance_ordinal(this)
         this = self.estimatedSalary_ordinal(this)
-
-        print(f'데이터 정제 후: \n {this.train}')
 
         # 고객의 서비스 이탈과 각 칼럼간의 상관계수
         # self.correlation_member_secession(this.train)
@@ -411,7 +404,6 @@ class MemberModelingDataPreprocessing:
         cols = this.train.columns.tolist()
         cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
         this.train = this.train[cols]
-        print(this.train)
         return this
 
 
@@ -592,6 +584,18 @@ class MemberDao(MemberDto):
         df = service.hook()
         print(df.head())
 
+        mmdp = MemberModelingDataPreprocessing()
+        refined_members = mmdp.hook_process(df)
+        refined_members = refined_members.drop('exited', axis=1)
+        refined_members = [np.array(refined_members, dtype = np.float32)]
+
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'member')
+        new_model = tf.keras.models.load_model(os.path.join(path, 'member_churn.h5'))
+
+        model_pred = new_model.predict(refined_members)
+
+        df['probability_churn'] = model_pred
+
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
         session.commit()
         session.close()
@@ -681,13 +685,11 @@ class MemberChurnPredModel(object):
 
     def get_data(self):
         data = pd.read_sql_table('members', engine.connect())
-        print(f'MemberChurnPredModel에서 불러온 테이블\n{data}')
 
         # 전처리
         modeling_data_process = MemberModelingDataPreprocessing()
         refined_data = modeling_data_process.hook_process(data)
         data = refined_data.to_numpy()
-        print('member training ==> get_data', data[:60])
 
         table_col = data.shape[1]
         y_col = 1
@@ -717,8 +719,6 @@ class MemberChurnPredModel(object):
         checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
-        # self.model.fit(x=self.x_train, y=self.y_train, 
-        # validation_data=(self.x_validation, self.y_validation), epochs=20, verbose=1)
         self.model.fit(self.x_train, self.y_train, epochs=50, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
         self.model.load_weights(checkpoint_path)
@@ -782,7 +782,6 @@ class MemberChurnPredService(object):
 
         mmdp = MemberModelingDataPreprocessing()
         refined_member = mmdp.hook_process(member)
-        print(f'REFINED MEMBERS: {refined_member}')
     
         self.geography = refined_member['geography'][0]
         self.gender = refined_member['gender'][0]
