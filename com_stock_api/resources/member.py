@@ -97,7 +97,6 @@ class MemberDBDataProcessing:
         # 데이터베이스 속성명과 컬럼명 일치 작업
         this = service.drop_feature(this, 'RowNumber')
         this = service.drop_feature(this, 'CustomerId')
-        this = service.drop_feature(this, 'AgeGroup')
         this.train = this.train.rename({'Surname': 'name', 'CreditScore': 'credit_score', 'Geography': 'geography', 
         'Gender': 'gender', 'Age': 'age', 'Tenure': 'tenure', 'Balance': 'balance', 'NumOfProducts': 'stock_qty', 'HasCrCard': 'has_credit', 'IsActiveMember': 'is_active_member', 
         'EstimatedSalary': 'estimated_salary', 'Password': 'password', 'Email': 'email', 'Role': 'role', 'Profile': 'profile', 'Probability_churn': 'probability_churn', 'Exited': 'exited'}, axis='columns')
@@ -231,9 +230,9 @@ class MemberModelingDataPreprocessing:
             m = this.train
             _data = {'email': m.email, 'password': m.password, 'name': m.name, 'geography': m.geography, 'gender': m.gender, 'age': int(m.age), 'profile': m.profile, 
             'tenure': int(m.tenure), 'stock_qty': int(m.stock_qty), 'balance': float(m.balance), 'has_credit': int(m.has_credit), 'credit_score': int(m.credit_score), 'is_active_member': int(m.is_active_member),
-             'estimated_salary': float(m.estimated_salary), 'role': m.role, 'probability_churn': float(m.probability_churn), 'exited': int(m.exited)}
-            self.isNewMember = True
+                'estimated_salary': float(m.estimated_salary), 'role': m.role, 'probability_churn': float(m.probability_churn), 'exited': int(m.exited)}
             this.train = pd.DataFrame([_data])
+            self.isNewMember = True 
             members_data = pd.read_sql_table('members', engine.connect())
             this.train = pd.concat([members_data, this.train], ignore_index=True)
 
@@ -592,9 +591,26 @@ class MemberDao(MemberDto):
         session = Session()
         df = service.hook()
         print(df.head())
+
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
         session.commit()
         session.close()
+
+        members = pd.read_sql_table('members', engine.connect())
+        for idx, member in members.iterrows():
+            m = dict(member)
+            print(type(m))
+            member = MemberDto(m['email'], m['password'], m['name'], m['profile'], m['geography'], m['gender'], m['age'], m['tenure'], m['stock_qty'], 
+            m['balance'], m['has_credit'], m['credit_score'], m['is_active_member'], m['estimated_salary'], m['role'], m['probability_churn'], m['exited'])
+            mcp = MemberChurnPredService()
+            mcp.assign(member)
+            # mcp.assign(member.to_frame().T)
+            prediction = mcp.predict()
+
+            prediction = round(prediction[0, 0], 5)
+            print(f'PREDICTION: {prediction}')
+            member['probability_churn'] = float(prediction)
+        
     
     @staticmethod
     def update(member):
@@ -698,7 +714,7 @@ class MemberChurnPredModel(object):
     # 모델 훈련
     def train_model(self):
         print('********** train model **********')
-        checkpoint_path = 'member_churn_train_1/cp.ckpt'
+        checkpoint_path = 'member_churn_train/cp.ckpt'
         cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
         # self.model.fit(x=self.x_train, y=self.y_train, 
@@ -768,16 +784,6 @@ class MemberChurnPredService(object):
         refined_member = mmdp.hook_process(member)
         print(f'REFINED MEMBERS: {refined_member}')
     
-        # self.geography = member.geography
-        # self.gender = member.gender
-        # self.tenure = member.tenure
-        # self.stock_qty = member.stock_qty
-        # self.balance = member.balance
-        # self.has_credit = member.has_credit
-        # self.credit_score = member.credit_score
-        # self.is_active_member = member.is_active_member
-        # self.estimated_salary = member.estimated_salary
-        # self.AgeGroup = member.AgeGroup
         self.geography = refined_member['geography'][0]
         self.gender = refined_member['gender'][0]
         self.tenure = refined_member['tenure'][0]
