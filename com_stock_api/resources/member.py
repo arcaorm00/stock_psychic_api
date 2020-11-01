@@ -216,12 +216,24 @@ class MemberModelingDataPreprocessing:
     
     def __init__(self):
         self.filereader = FileReader()
+        self.isNewMember = False
 
     def hook_process(self, member_data):
         this = self.filereader
         
         members = member_data
         this.train = members
+
+        if isinstance(this.train, MemberDto):
+            m = this.train
+            _data = {'email': m.email, 'password': m.password, 'name': m.name, 'geography': m.geography, 'gender': m.gender, 'age': int(m.age), 'profile': m.profile, 
+            'tenure': int(m.tenure), 'stock_qty': int(m.stock_qty), 'balance': float(m.balance), 'has_credit': int(m.has_credit), 'credit_score': int(m.credit_score), 'is_active_member': int(m.is_active_member),
+             'estimated_salary': float(m.estimated_salary), 'role': m.role, 'probability_churn': float(m.probability_churn), 'exited': int(m.exited)}
+            self.isNewMember = True
+            this.train = pd.DataFrame([_data])
+            members_data = pd.read_sql_table('members', engine.connect())
+            this.train = pd.concat([members_data, this.train], ignore_index=True)
+            print(this.train)          
         
         # 컬럼 삭제
         # print(this.train)
@@ -231,6 +243,8 @@ class MemberModelingDataPreprocessing:
         this = self.drop_feature(this, 'profile')
         this = self.drop_feature(this, 'role')
         this = self.drop_feature(this, 'probability_churn')
+
+        print(f'칼럼 삭제 후: \n {this.train}')
         
         # 데이터 정제
         this = self.geography_nominal(this)
@@ -241,11 +255,17 @@ class MemberModelingDataPreprocessing:
         this = self.balance_ordinal(this)
         this = self.estimatedSalary_ordinal(this)
 
+        print(f'데이터 정제 후: \n {this.train}')
+
         # 고객의 서비스 이탈과 각 칼럼간의 상관계수
         # self.correlation_member_secession(this.train)
 
         # label 컬럼 재배치
         this = self.columns_relocation(this)
+
+        if self.isNewMember:
+            this.train = this.train.tail(1)
+            print(f'EVERYTHING IS DONE: \n{this.train}')
 
         return this.train
         
@@ -294,7 +314,7 @@ class MemberModelingDataPreprocessing:
         return this.train['Exited']
 
     @staticmethod
-    def drop_feature(this, feature) -> object:
+    def drop_feature(this, feature):
         this.train = this.train.drop([feature], axis=1)
         return this
 
@@ -304,7 +324,7 @@ class MemberModelingDataPreprocessing:
 
     @staticmethod
     def creditScore_ordinal(this):
-        this.train['credit_score'] = pd.qcut(this.train['credit_score'], 11, labels={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        this.train['credit_score'] = pd.qcut(this.train['credit_score'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
         return this
 
     @staticmethod
@@ -320,9 +340,13 @@ class MemberModelingDataPreprocessing:
         this.train = this.train
         return this
 
-    @staticmethod
-    def age_ordinal(this):
+    # @staticmethod
+    def age_ordinal(self, this):
+
         train = this.train
+        print(f'age_ordinal\n {train}')
+        print(f'마지막 회원 age type : {train.tail(1)["age"]}')
+        print(f'첫번째 회원 age type : {train.head(1)["age"]}')
         train['age'] = train['age'].fillna(-0.5)
         bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf] # 범위
         labels = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'YoungAdult', 'Adult', 'Senior']
@@ -348,7 +372,10 @@ class MemberModelingDataPreprocessing:
             'Senior': 7
         }
         train['AgeGroup'] = train['AgeGroup'].map(age_mapping)
+        if self.isNewMember:
+            train = train.tail(1)
         this.train = train
+        print(f'AFTER AGE: {this.train}')
         return this
 
     @staticmethod
@@ -866,19 +893,19 @@ class Auth(Resource):
         body = request.get_json()
         print(f'body: {body}')
         member = MemberDto(**body)
-        MemberDao.save(member)
+        # MemberDao.save(member)
 
 
-        members = pd.read_sql_table('members', engine.connect())
+        # members = pd.read_sql_table('members', engine.connect())
         mmdp = MemberModelingDataPreprocessing()
-        refined_members = mmdp.hook_process(members)
-        print(f'REFINED MEMBERS: {refined_members.head()}')
+        refined_member = mmdp.hook_process(member)
+        print(f'REFINED MEMBERS: {refined_member}')
 
-        for idx, member in refined_members.iterrows():
-            mcp = MemberChurnPredService()
-            mcp.assign(member)
-            prediction = mcp.predict()
-            print(f'PREDICTION: {prediction}')
+        # for idx, member in refined_members.iterrows():
+        #     mcp = MemberChurnPredService()
+        #     mcp.assign(member)
+        #     prediction = mcp.predict()
+        #     print(f'PREDICTION: {prediction}')
 
         email = member.email
         return {'email': str(email)}, 200
