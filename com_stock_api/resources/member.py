@@ -43,6 +43,7 @@ from sklearn.linear_model import LogisticRegression
  *   ------------------------------------------------------------------------
  *   2020.11.01     곽아름      새 멤버 insert시 이탈 확률 값 할당 로직 추가
  *   2020.11.01     곽아름      멤버 데이터셋 insert시 이탈 확률 값 할당 로직 추가
+ *   2020.11.02     곽아름      이탈 확률이 0.6 이상인 멤버 추출 메소드 추가
 ''' 
 
 
@@ -597,15 +598,19 @@ class MemberDao(MemberDto):
 
         mmdp = MemberModelingDataPreprocessing()
         refined_members = mmdp.hook_process(df)
+        print(f'REFINED_MEMBERS: \n{refined_members}')
         refined_members = refined_members.drop('exited', axis=1)
         refined_members = [np.array(refined_members, dtype = np.float32)]
+        print(f'REFINED_MEMBERS AFTER NUMPY ARRAY: \n{refined_members}')
 
         path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'member')
         new_model = tf.keras.models.load_model(os.path.join(path, 'member_churn.h5'))
 
         model_pred = new_model.predict(refined_members)
+        print(f'MODEL PREDICTION: {model_pred}')
 
         df['probability_churn'] = model_pred
+        print(f'LAST DATAFRAME: {df}')
 
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
         session.commit()
@@ -734,9 +739,9 @@ class MemberChurnPredModel(object):
 
         self.model.load_weights(checkpoint_path)
 
-        checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp-{epoch: 04d}.ckpt')
-        checkpoint_dir = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, verbose=1, save_weights_only=True, save_freq=5)
-        print(f'CHECKPOINT: {checkpoint_path}')
+        # checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp-{epoch: 04d}.ckpt')
+        # checkpoint_dir = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, verbose=1, save_weights_only=True, save_freq=5)
+        # print(f'CHECKPOINT: {checkpoint_path}')
         
         self.model.save_weights(checkpoint_path.format(epoch=0))
         
