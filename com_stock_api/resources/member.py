@@ -1,6 +1,6 @@
 from com_stock_api.ext.db import db, openSession
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 import pandas as pd
 import json
 
@@ -548,7 +548,7 @@ class MemberDao(MemberDto):
 
     @classmethod
     def find_all(cls):
-        sql = cls.query
+        sql = cls.query.filter(cls.exited != 1)
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
@@ -560,10 +560,17 @@ class MemberDao(MemberDto):
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
+    def find_high_proba_churn(cls):
+        sql = cls.query.filter(and_(cls.exited != 1, cls.probability_churn > 0.6)).order_by(cls.probability_churn.desc())
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        # print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
+
+    @classmethod
     def find_by_name(cls, member):
         sql = cls.query.filter(cls.name.like(member.name))
         df = pd.read_sql(sql.statement, sql.session.bind)
-        print(json.loads(df.to_json(orient='records')))
+        # print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @classmethod
@@ -944,4 +951,14 @@ class Access(Resource):
         print(f'email: {member.email}')
         print(f'password: {member.password}')
         data = MemberDao.login(member)
-        return data[0], 200
+        if data[0]['exited'] == 0:
+            return data[0], 200
+        else:
+            print('탈퇴한 계정입니다!')
+            return {'message': 'Member not found'}, 500
+
+class HighChurnMembers(Resource):
+
+    def get(self):
+        members = MemberDao.find_high_proba_churn()
+        return members, 200

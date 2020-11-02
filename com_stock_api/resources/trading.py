@@ -258,14 +258,14 @@ class TradingDao(TradingDto):
 
     @classmethod
     def find_by_id(cls, trading):
-        sql = cls.query.filter_by(cls.id == trading.id)
+        sql = cls.query.filter(cls.id == trading.id)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @classmethod
-    def find_by_email(cls, trading):
-        sql = cls.query.filter_by(cls.email==trading.email)
+    def find_by_email(cls, email):
+        sql = cls.query.filter(cls.email == email)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -372,6 +372,7 @@ class Tradings(Resource):
         t_dao = TradingDao()
         t_dao.insert_many('tradings')
 
-    def get(self):
-        data = TradingDao.find_all()
+    def get(self, email):
+        print(email)
+        data = TradingDao.find_by_email(email)
         return data, 200
