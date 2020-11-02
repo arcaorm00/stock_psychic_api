@@ -42,6 +42,7 @@ from sklearn.linear_model import LogisticRegression
  * @ 수정일         수정자                      수정내용
  *   ------------------------------------------------------------------------
  *   2020.11.01     곽아름      새 멤버 insert시 이탈 확률 값 할당 로직 추가
+ *   2020.11.01     곽아름      멤버 데이터셋 insert시 이탈 확률 값 할당 로직 추가
 ''' 
 
 
@@ -543,7 +544,7 @@ class MemberDao(MemberDto):
     
     @classmethod
     def count(cls):
-        return session.query(func.count(MemberDto.id)).one()
+        return session.query(func.count(MemberDto.email)).one()
 
     @classmethod
     def find_all(cls):

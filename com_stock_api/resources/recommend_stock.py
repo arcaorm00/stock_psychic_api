@@ -15,16 +15,18 @@ class RecommendStockDto(db.Model):
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
-    stock_type: str = db.Column(db.String(50), nullable=True)
-    stock_id: int = db.Column(db.Integer, nullable=False)
+    stock_type: str = db.Column(db.String(50), nullable=False)
+    # stock_id: int = db.Column(db.Integer, nullable=False)
+    stock_ticker: str = db.Column(db.String(100), nullable=False)
 
-    def __init__(self, email, stock_type, stock_id):
+    def __init__(self, email, stock_type, stock_ticker):
         self.email = email
         self.stock_type = stock_type
-        self.stock_id = stock_id
+        # self.stock_id = stock_id
+        self.stock_ticker = stock_ticker
 
     def __repr__(self):
-        return f'id={self.id}, email={self.email}, stock_type={self.stock_type}, stock_id={self.stock_id}'
+        return f'id={self.id}, email={self.email}, stock_type={self.stock_type}, stock_ticker={self.stock_ticker}'
 
     @property
     def json(self):
@@ -32,14 +34,14 @@ class RecommendStockDto(db.Model):
             'id': self.id,
             'email': self.email,
             'stock_type': self.stock_type,
-            'stock_id': self.stock_id
+            'stock_ticker': self.stock_ticker
         }
 
 class RecommendStockVo:
     id: int = 0
     email: str = ''
     stock_type: str =''
-    stock_id: int = 0
+    stock_ticker: str = ''
 
 
 

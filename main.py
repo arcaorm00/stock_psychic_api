@@ -43,19 +43,19 @@ with app.app_context():
 with app.app_context():
     count = MemberDao.count()
     print(f'Members Total Count is {count}')
-    if count == 0:
+    if count == (0,):
         MemberDao.insert_many()
 
 with app.app_context():
     count = BoardDao.count()
     print(f'Boards Total Count is {count}')
-    if count == 0:
+    if count == (0,):
         BoardDao.insert_many()
 
 with app.app_context():
     count = TradingDao.count()
     print(f'Tradings Total Count is {count}')
-    if count == 0:
+    if count == (0,):
         TradingDao.insert_many()
 
 
