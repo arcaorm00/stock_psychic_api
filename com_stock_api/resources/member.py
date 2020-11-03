@@ -320,7 +320,7 @@ class MemberModelingDataPreprocessing:
         return this
 
     @staticmethod
-    def surname_nominal(this):
+    def name_nominal(this):
         return this
 
     @staticmethod
@@ -821,7 +821,6 @@ class MemberChurnPredService(object):
         print(f'predict data: \n {data}')
         data = np.array(data, dtype = np.float32)
         
-
         pred = new_model.predict(data)
 
         return pred

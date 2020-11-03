@@ -278,7 +278,7 @@ class Board(Resource):
     @staticmethod
     def delete(id):
         try:
-            BoardDao.delete(id)
+            BoardDao.delete_board(id)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)

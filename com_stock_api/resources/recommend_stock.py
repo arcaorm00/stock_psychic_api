@@ -146,7 +146,7 @@ class RecommendStocks():
             
             main_n = np.linalg.norm(this_member)
             member_n = np.linalg.norm(row_mem)
-            prod = np.dot(this_member.T.to_numpy(), row_mem)
+            prod = np.dot(this_member, row_mem)
             print(f'prod: {prod}')
 
             sim_dict[mem] = prod/(main_n*member_n)

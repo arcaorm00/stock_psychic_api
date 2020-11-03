@@ -120,6 +120,12 @@ class CommentDao(CommentDto):
         ...
 
     @classmethod
+    def find_maxnum_for_board(cls, board_id):
+        sql = cls.query.filter(max(cls.id)).filter(cls.board_id == board_id)
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
+
+    @classmethod
     def find_all(cls):
         sql = cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
@@ -211,7 +217,7 @@ class Comment(Resource):
         args = request.get_json()
         print(f'Comment {args["id"]} updated')
         try:
-            CommentDao.update(args)
+            CommentDao.modify_comment(args)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)
@@ -220,7 +226,7 @@ class Comment(Resource):
     @staticmethod
     def delete(id):
         try:
-            CommentDao.delete(id)
+            CommentDao.delete_comment(id)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)
@@ -235,5 +241,9 @@ class Comments(Resource):
         data = CommentDao.find_by_boardid(id)
         return data, 200
 
+class CommentMaxNum(Resource):
+    def get(self, id):
+        num = CommentDao.find_maxnum_for_board(id)
+        return num, 200
 
 
