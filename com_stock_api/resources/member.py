@@ -596,6 +596,7 @@ class MemberDao(MemberDto):
         df = service.hook()
         print(df.head())
 
+        # 저장된 모델로 멤버 이탈 확률 구하기
         mmdp = MemberModelingDataPreprocessing()
         refined_members = mmdp.hook_process(df)
         print(f'REFINED_MEMBERS: \n{refined_members}')
@@ -647,8 +648,6 @@ class MemberDao(MemberDto):
     
     @classmethod
     def delete(cls, email):
-        # join = db.session.query(CommentDto).join(MemberDto, MemberDto.email==CommentDto.email).filter(CommentDto.email == email)
-        # print(f'JOIN: {join}')
         data = cls.query.get(email)
         db.session.delete(data)
         db.session.commit()
@@ -817,8 +816,6 @@ class MemberChurnPredService(object):
         # model_partial = tf.keras.Model(inputs=new_model.input)
         # model_partial.summary()
 
-        # data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
-        #  self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup],]
         data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
          self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup], ]
         print(f'predict data: \n {data}')

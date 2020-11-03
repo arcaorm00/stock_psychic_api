@@ -1,4 +1,4 @@
-from com_stock_api.ext.db import db, openSession
+from com_stock_api.ext.db import db, openSession, engine
 from com_stock_api.resources.member import MemberDto
 
 import pandas as pd
@@ -7,6 +7,9 @@ import json
 from typing import List
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
+
+import numpy as np
+import math
 
 
 
@@ -22,133 +25,58 @@ from flask_restful import Resource, reqparse
 
 class RecommendStockPreprocessing():
 
-    def hook_process(self, member_data):
-        this = self.filereader
-        
-        members = member_data
-        this.train = members
+    def hook_process(self, members):
 
-        if isinstance(this.train, MemberDto):
-            m = this.train
-            _data = {'email': m.email, 'password': m.password, 'name': m.name, 'geography': m.geography, 'gender': m.gender, 'age': int(m.age), 'profile': m.profile, 
-            'tenure': int(m.tenure), 'stock_qty': int(m.stock_qty), 'balance': float(m.balance), 'has_credit': int(m.has_credit), 'credit_score': int(m.credit_score), 'is_active_member': int(m.is_active_member),
-                'estimated_salary': float(m.estimated_salary), 'role': m.role, 'probability_churn': float(m.probability_churn), 'exited': int(m.exited)}
-            this.train = pd.DataFrame([_data])
-            self.isNewMember = True 
-            members_data = pd.read_sql_table('members', engine.connect())
-            this.train = pd.concat([members_data, this.train], ignore_index=True)
-
-        # isAdmin = this.train['email'] == 'admin@stockpsychic.com'
-        # this.train = this.train[~isAdmin]
+        isAdmin = members['email'] == 'admin@stockpsychic.com'
+        members = members[~isAdmin]
         
         # 컬럼 삭제
-        this = self.drop_feature(this, 'email')
-        this = self.drop_feature(this, 'password')
-        this = self.drop_feature(this, 'name')
-        this = self.drop_feature(this, 'profile')
-        this = self.drop_feature(this, 'role')
-        this = self.drop_feature(this, 'probability_churn')
+        members = self.drop_feature(members, 'password')
+        members = self.drop_feature(members, 'name')
+        members = self.drop_feature(members, 'profile')
+        members = self.drop_feature(members, 'role')
+        members = self.drop_feature(members, 'probability_churn')
         
         # 데이터 정제
-        this = self.geography_nominal(this)
-        this = self.gender_nominal(this)
-        this = self.age_ordinal(this)
-        this = self.drop_feature(this, 'age')
-        this = self.creditScore_ordinal(this)
-        this = self.balance_ordinal(this)
-        this = self.estimatedSalary_ordinal(this)
+        members = self.geography_nominal(members)
+        members = self.gender_nominal(members)
+        members = self.age_ordinal(members)
+        members = self.drop_feature(members, 'age')
+        members = self.creditScore_ordinal(members)
+        members = self.balance_ordinal(members)
+        members = self.estimatedSalary_ordinal(members)
 
-        # 고객의 서비스 이탈과 각 칼럼간의 상관계수
-        # self.correlation_member_secession(this.train)
-
-        # label 컬럼 재배치
-        this = self.columns_relocation(this)
-
-        if self.isNewMember:
-            this.train = this.train.tail(1)
-            this.train.index = [0]
-            print(f'EVERYTHING IS DONE: \n{this.train}')
-
-        return this.train
-        
-
-    # 고객의 서비스 이탈과 각 칼럼간의 상관계수
-    def correlation_member_secession(self, members):
-        member_columns = members.columns
-        member_correlation = {}
-        for col in member_columns:
-            cor = np.corrcoef(members[col], members['exited'])
-            member_correlation[col] = cor
-        '''
-        r이 -1.0과 -0.7 사이이면, 강한 음적 선형관계,
-        r이 -0.7과 -0.3 사이이면, 뚜렷한 음적 선형관계,
-        r이 -0.3과 -0.1 사이이면, 약한 음적 선형관계,
-        r이 -0.1과 +0.1 사이이면, 거의 무시될 수 있는 선형관계,
-        r이 +0.1과 +0.3 사이이면, 약한 양적 선형관계,
-        r이 +0.3과 +0.7 사이이면, 뚜렷한 양적 선형관계,
-        r이 +0.7과 +1.0 사이이면, 강한 양적 선형관계
-
-        result:
-
-        {'CustomerId': array([[ 1.        , -0.00624799], [-0.00624799,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
-        'CreditScore': array([[ 1.        , -0.02709354], [-0.02709354,  1.        ]]), ==> 거의 무시될 수 있는 선형관계
-        'Geography': array([[1.        , 0.15377058], [0.15377058, 1.        ]]), ==> 약한 양적 선형관계
-        'Gender': array([[1.        , 0.10651249], [0.10651249, 1.        ]]), ==> 약한 양적 선형관계
-        'Age': array([[1.        , 0.28532304], [0.28532304, 1.        ]]), ==> 약한 양적 선형관계
-        'Tenure': array([[ 1.        , -0.01400061], [-0.01400061,  1.        ]]), ==> 거의 무시될 수 있는 선형관계
-        'Balance': array([[1.        , 0.11853277], [0.11853277, 1.        ]]), ==> 약한 양적 선형관계
-        'NumOfProducts': array([[ 1.        , -0.04781986], [-0.04781986,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
-        'HasCrCard': array([[ 1.        , -0.00713777], [-0.00713777,  1.        ]]),  ==> 거의 무시될 수 있는 선형관계
-        'IsActiveMember': array([[ 1.        , -0.15612828], [-0.15612828,  1.        ]]), ==> 약한 음적 선형관계
-        'EstimatedSalary': array([[1.        , 0.01300995], [0.01300995, 1.        ]]),  ==> 거의 무시될 수 있는 선형관계
-        'Exited': array([[1., 1.], [1., 1.]]), 
-        'AgeGroup': array([[1.        , 0.21620629], [0.21620629, 1.        ]])} ==> 약한 양적 선형관계
-        '''
-
+        return members
 
     # ---------------------- 데이터 정제 ----------------------
     @staticmethod
-    def create_train(this):
-        return this.train.drop('Exited', axis=1)
+    def drop_feature(members, feature):
+        members = members.drop([feature], axis=1)
+        return members
 
     @staticmethod
-    def create_label(this):
-        return this.train['Exited']
+    def creditScore_ordinal(members):
+        members['credit_score'] = pd.qcut(members['credit_score'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return members
 
     @staticmethod
-    def drop_feature(this, feature):
-        this.train = this.train.drop([feature], axis=1)
-        return this
-
-    @staticmethod
-    def surname_nominal(this):
-        return this
-
-    @staticmethod
-    def creditScore_ordinal(this):
-        this.train['credit_score'] = pd.qcut(this.train['credit_score'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-        return this
-
-    @staticmethod
-    def geography_nominal(this):
+    def geography_nominal(members):
         geography_mapping = {'France': 1, 'Spain': 2, 'Germany': 3}
-        this.train['geography'] = this.train['geography'].map(geography_mapping)
-        return this
+        members['geography'] = members['geography'].map(geography_mapping)
+        return members
 
     @staticmethod
-    def gender_nominal(this):
+    def gender_nominal(members):
         gender_mapping = {'Male': 0, 'Female': 1, 'Etc.': 2}
-        this.train['gender'] = this.train['gender'].map(gender_mapping)
-        this.train = this.train
-        return this
+        members['gender'] = members['gender'].map(gender_mapping)
+        return members
 
-    # @staticmethod
-    def age_ordinal(self, this):
-        train = this.train
-        train['age'] = train['age'].fillna(-0.5)
+    @staticmethod
+    def age_ordinal(members):
+        members['age'] = members['age'].fillna(-0.5)
         bins = [-1, 18, 25, 30, 35, 40, 45, 50, 60, np.inf] # 범위
         labels = ['Unknown', 'Youth', 'YoungAdult', 'Thirties', 'LateThirties', 'Forties', 'LateForties', 'AtferFifties', 'Senior']
-        train['AgeGroup'] = pd.cut(train['age'], bins, labels=labels)
+        members['AgeGroup'] = pd.cut(members['age'], bins, labels=labels)
         age_title_mapping = {
             0: 'Unknown',
             1: 'Youth', 
@@ -171,43 +99,70 @@ class RecommendStockPreprocessing():
             'AtferFifties': 7,
             'Senior': 8
         }
-        train['AgeGroup'] = train['AgeGroup'].map(age_mapping)
-
-        this.train = train
-        return this
+        members['AgeGroup'] = members['AgeGroup'].map(age_mapping)
+        return members
 
     @staticmethod
-    def tenure_ordinal(this):
-        return this
+    def balance_ordinal(members):
+        members['balance'] = pd.qcut(members['balance'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return members
 
     @staticmethod
-    def balance_ordinal(this):
-        this.train['balance'] = pd.qcut(this.train['balance'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-        return this
+    def estimatedSalary_ordinal(members):
+        members['estimated_salary'] = pd.qcut(members['estimated_salary'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+        return members
+
+
+
+
+
+class RecommendStocks():
+
+    def hook_process(self, email):
+        similarity = self.similarity(email)
+        # print(f'similarity: \n{similarity}')
 
     @staticmethod
-    def numOfProducts_ordinal(this):
-        return this
+    def similarity(email):
+        members = pd.read_sql_table('members', engine.connect())
+        preprocessing = RecommendStockPreprocessing()
+        refined_members = preprocessing.hook_process(members)
+        refined_members.set_index(refined_members['email'], inplace=True)
+        refined_members = refined_members.drop(['email'], axis=1)
+        print(f'REFINED MEMBERS: \n{refined_members}')
+        
+        this_member = refined_members[refined_members.index == email].T
+        print(f'This_Member: \n {this_member}')
+        is_this = refined_members.index == email
+        else_members = refined_members[~is_this]
+        print(f'ELSE MEMBERS: \n {else_members}')
 
-    @staticmethod
-    def hasCrCard_numeric(this):
-        return this
+        sim_dict = {}
 
-    @staticmethod
-    def isActiveMember_numeric(this):
-        return this
+        for mem in else_members.index:
+            row_mem = else_members[else_members.index == mem]
+            # print(f'NP.ARRAY THISMEM: {this_member.to_numpy()}')
+            # print(f'NP.ARRAY ROWMEM: {row_mem.to_numpy()}')
+            
+            main_n = np.linalg.norm(this_member)
+            member_n = np.linalg.norm(row_mem)
+            prod = np.dot(this_member.T.to_numpy(), row_mem)
+            print(f'prod: {prod}')
 
-    @staticmethod
-    def estimatedSalary_ordinal(this):
-        this.train['estimated_salary'] = pd.qcut(this.train['estimated_salary'].rank(method='first'), 10, labels={1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-        return this
+            sim_dict[mem] = prod/(main_n*member_n)
 
-    # ---------------------- label 컬럼 위치 조정 ---------------------- 
-    def columns_relocation(self, this):
-        cols = this.train.columns.tolist()
-        cols =  (cols[:-2] + cols[-1:]) + cols[-2:-1]
-        this.train = this.train[cols]
-        return this
+            if mem == '15570931@gmail.com':
+                break
+
+        return sim_dict
+
+
+if __name__ == '__main__':
+    rs = RecommendStocks()
+    rs.hook_process(email='15660679@gmail.com')
+    
+
+
 
 
 # =====================================================================
