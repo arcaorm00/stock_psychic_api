@@ -76,7 +76,7 @@ class BoardPro:
             con = re.sub('<!--(.+?)-->', '', str(data['content'][idx]))
             con = con.replace('<!--', '')
             con = con.replace('교보증권', 'Stock Psychic')
-            con = con.replace('\r', '\n')
+            con = con.replace('\r', '<br/>')
             data['content'][idx] = con
         print(data)
         return data

@@ -124,7 +124,7 @@ class TradingPro:
         for idx, member in self.members.iterrows():
             members_trading_qty = int(member['stock_qty'])
 
-            if int(member['balance']) <= 0: continue
+            if int(member['balance']) <= 0 or int(member['exited']) == 1: continue
             
             # tickers의 값 중 회원의 stock_qty 수만큼 랜덤 추출
             random_ticker = random.choices(tickers, k=members_trading_qty)

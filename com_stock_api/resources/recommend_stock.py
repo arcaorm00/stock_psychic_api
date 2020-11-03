@@ -10,6 +10,7 @@ from flask_restful import Resource, reqparse
 
 import numpy as np
 import math
+import operator
 
 
 
@@ -119,42 +120,97 @@ class RecommendStockPreprocessing():
 class RecommendStocks():
 
     def hook_process(self, email):
+        print('START')
         similarity = self.similarity(email)
         # print(f'similarity: \n{similarity}')
+        sim_members = self.sortHundred(similarity)
+        print(f'similar members: \n{sim_members}')
+        match_tradings = self.similarMembersTradings(sim_members, email)
+        print(f'match_tradings: \n{match_tradings}')
 
     @staticmethod
     def similarity(email):
         members = pd.read_sql_table('members', engine.connect())
         preprocessing = RecommendStockPreprocessing()
         refined_members = preprocessing.hook_process(members)
+        
+        isExitedMem = refined_members[refined_members['exited']==1].index
+        refined_members = refined_members.drop(isExitedMem)
+
         refined_members.set_index(refined_members['email'], inplace=True)
         refined_members = refined_members.drop(['email'], axis=1)
-        print(f'REFINED MEMBERS: \n{refined_members}')
         
-        this_member = refined_members[refined_members.index == email].T
-        print(f'This_Member: \n {this_member}')
-        is_this = refined_members.index == email
-        else_members = refined_members[~is_this]
-        print(f'ELSE MEMBERS: \n {else_members}')
+        # print(f'REFINED MEMBERS: \n{refined_members}')
 
+        base_columns = refined_members.columns
+
+        this_member = pd.DataFrame(refined_members.loc[email, base_columns]).T
+        else_members = refined_members.loc[:, base_columns].drop(email, axis=0)
+        # print(f'this_member: {this_member}')
+        # print(f'else_member: {else_members}')
+
+        col_list = list(this_member.columns)
+        # print(f'col_list: {col_list}')
         sim_dict = {}
 
         for mem in else_members.index:
-            row_mem = else_members[else_members.index == mem]
-            # print(f'NP.ARRAY THISMEM: {this_member.to_numpy()}')
-            # print(f'NP.ARRAY ROWMEM: {row_mem.to_numpy()}')
+
+            main_n = np.linalg.norm(this_member.loc[email, base_columns])
+            row_mem = np.linalg.norm(else_members.loc[mem, base_columns])
+            # print(f'main_n: {main_n}')
+            # print(f'row_mem: {row_mem}')
+            # print(f'this_member loc: \n{this_member.loc[email, base_columns]}')
+            # print(f'else_member loc: \n{else_members.loc[mem, base_columns]}')
+            prod = np.dot(this_member.loc[email, base_columns], else_members.loc[mem, base_columns])
+            # print(f'prod: \n{prod}')
+            sim_dict[mem] = prod/(main_n*row_mem)
+        
+        # this_member = refined_members[refined_members.index == email].T
+        # print(f'This_Member: \n {this_member}')
+        # is_this = refined_members.index == email
+        # else_members = refined_members[~is_this]
+        # print(f'ELSE MEMBERS: \n {else_members}')
+
+        # sim_dict = {}
+
+        # for mem in else_members.index:
+        #     row_mem = else_members[else_members.index == mem]
+        #     # print(f'NP.ARRAY THISMEM: {this_member.to_numpy()}')
+        #     # print(f'NP.ARRAY ROWMEM: {row_mem.to_numpy()}')
             
-            main_n = np.linalg.norm(this_member)
-            member_n = np.linalg.norm(row_mem)
-            prod = np.dot(this_member, row_mem)
-            print(f'prod: {prod}')
+        #     main_n = np.linalg.norm(this_member)
+        #     member_n = np.linalg.norm(row_mem)
+        #     prod = np.dot(this_member, row_mem)
+        #     print(f'prod: {prod}')
 
-            sim_dict[mem] = prod/(main_n*member_n)
+        #     sim_dict[mem] = prod/(main_n*member_n)
 
-            if mem == '15570931@gmail.com':
-                break
+        #     if mem == '15570931@gmail.com':
+        #         break
 
         return sim_dict
+
+    @staticmethod
+    def sortHundred(sim_dict):
+        sim_members = sorted(sim_dict.items(), key=operator.itemgetter(1), reverse=True)[:100]
+        return sim_members
+
+    @staticmethod
+    def similarMembersTradings(sim_members, email):
+        tradings = pd.read_sql_table('tradings', engine.connect())
+        this_members_tradings = tradings[tradings['email'] == email]['stock_ticker']
+        print(f'this_members_tradings: {this_members_tradings}')
+        
+        match_tradings = pd.DataFrame(columns=('id', 'email', 'stock_type', 'stock_ticker', 'stock_qty', 'price', 'trading_date'))
+        for mem, prob in sim_members:
+            match_tradings = pd.concat([match_tradings, tradings[tradings['email'] == mem]])
+        # print(f'match_tradings: \n{match_tradings}')
+        stocks_size = match_tradings.groupby('stock_ticker').size()
+        print(type(stocks_size))
+        print(type(this_members_tradings))
+        temp = stocks_size.isin(list(this_members_tradings))
+        print(temp)
+        return stocks_size
 
 
 if __name__ == '__main__':
