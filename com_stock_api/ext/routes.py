@@ -5,7 +5,11 @@ from com_stock_api.resources.trading import Trading, Tradings
 
 # from com_stock_api.resources.recommend_stock import RecommendStock, RecommendStocks
 
-from com_stock_api.resources.prediction import Prediction, Predictions
+from com_stock_api.resources.yhfinance import YHFinance, YHFinances, TeslaGraph, AppleGraph
+from com_stock_api.resources.investingnews import Investing, AppleSentiment, TeslaSentiment
+from com_stock_api.resources.nasdaq_prediction import NasdaqPrediction, NasdaqPredictions, ApplePredGraph, TeslaPredGraph
+from com_stock_api.resources.uscovid import USCovid, USCovids
+
 from com_stock_api.resources.home import Home
 
 def initialize_routes(api):
@@ -25,6 +29,12 @@ def initialize_routes(api):
     # api.add_resource(RecommendStocks, '/api/recommend-stocks')
     # api.add_resource(RecommendStock, '/api/recommend-stock')
 
-    api.add_resource(Home, '/nasdaq')
-    api.add_resource(Prediction, '/nasdaq/prediction')
-    api.add_resource(Predictions, '/nasdaq/predictions')
+    api.add_resource(NasdaqPredictions, '/nasdaq/predictions')
+    api.add_resource(ApplePredGraph, '/nasdaq/apple_pred')
+    api.add_resource(TeslaPredGraph, '/nasdaq/tesla_pred')
+    api.add_resource(AppleGraph, '/nasdaq/apple')
+    api.add_resource(TeslaGraph, '/nasdaq/tesla')
+    
+    api.add_resource(AppleSentiment, '/nasdaq/apple_sentiment')
+    api.add_resource(TeslaSentiment, '/nasdaq/tesla_sentiment')
+    api.add_resource(USCovid, '/nasdaq/uscovid')

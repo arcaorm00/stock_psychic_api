@@ -9,7 +9,7 @@ from com_stock_api.resources.comment import CommentDao
 from com_stock_api.resources.trading import TradingDao
 from com_stock_api.resources.recommend_stock import RecommendStockDao
 
-from com_stock_api.resources.prediction import PredictionDao
+from com_stock_api.resources.nasdaq_prediction import NasdaqPredictionDao
 from com_stock_api.resources.uscovid import USCovidDao
 from com_stock_api.resources.yhfinance import YHFinanceDao
 from com_stock_api.resources.investingnews import InvestingDao
@@ -60,20 +60,32 @@ with app.app_context():
 
 
 with app.app_context():
-    count2 = USCovidDao.count()
-    print(f'US Covid case Total Count is {count}')
-    if count2 == 0:
-        USCovidDao.insert_many()
-with app.app_context():
-    count3 = YHFinanceDao.count()
-    print(f'NASDAQ history data Total Count is {count}')
-    if count3 == 0:
-        YHFinanceDao.insert_many()
-with app.app_context():
-    count4 = InvestingDao.count()
-    print(f'Stock news Total Count is {count}')
-    if count4 == 0:
-        InvestingDao.insert_many()
+    count1 = USCovidDao.count()
+    print(f'US Covid case Total Count is {count1[0]}')
+    if count1[0] == 0:
+        USCovidDao.bulk()
+
+    count2 = YHFinanceDao.count()
+    print(f'YHFinance data Total Count is {count2[0]}')
+    if count2[0] == 0:
+        YHFinanceDao.bulk()
+
+    count3 = InvestingDao.count()
+    print(f'Stock news Total Count is {count3[0]}')
+    if count3[0] == 0:
+        InvestingDao.bulk()
+
+    count4 = RecentNewsDao.count()
+    print(f'Recent news Total Count is {count4[0]}')
+    if count4[0] == 0:
+        RecentNewsDao.bulk()
+
+    count5 = NasdaqPredictionDao.count()
+    print(f'Nasdap Prediction Total Count is {count5}')
+    if count5 == 0:
+        NasdaqPredictionDao.bulk()
+
+        
 
 with app.app_context():
     news_count = NewsDao.count()
