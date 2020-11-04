@@ -14,6 +14,21 @@ import operator
 
 
 
+'''
+ * @ Module Name : recommend_stock.py
+ * @ Description : Recommend Stock
+ * @ since 2020.10.15
+ * @ version 1.0
+ * @ Modification Information
+ * @ author 곽아름
+ * @ special reference libraries
+ *     flask_restful
+ * @ 수정일         수정자                      수정내용
+ *   ------------------------------------------------------------------------
+ *   2020.11.03     곽아름      멤버간 유사도 측정 및 추천 종목 추출
+''' 
+
+
 
 
 # =====================================================================
@@ -124,7 +139,7 @@ class RecommendStocks():
         similarity = self.similarity(email)
         print(f'get similarity complete')
         sim_members = self.sortHundred(similarity)
-        print(f'similar members: \n{sim_members}')
+        # print(f'similar members: \n{sim_members}')
         match_tradings = self.similarMembersTradings(sim_members, email)
         print(f'match_tradings: \n{match_tradings}')
 
@@ -198,20 +213,18 @@ class RecommendStocks():
     @staticmethod
     def similarMembersTradings(sim_members, email):
         tradings = pd.read_sql_table('tradings', engine.connect())
-        this_members_tradings = tradings[tradings['email'] == email]['stock_ticker']
-        print(f'this_members_tradings: {this_members_tradings}')
+        this_members_tradings = list(tradings[tradings['email'] == email]['stock_ticker'])
+        # print(f'this_members_tradings: {this_members_tradings}')
         
         match_tradings = pd.DataFrame(columns=('id', 'email', 'stock_type', 'stock_ticker', 'stock_qty', 'price', 'trading_date'))
         for mem, prob in sim_members:
             match_tradings = pd.concat([match_tradings, tradings[tradings['email'] == mem]])
         # print(f'match_tradings: \n{match_tradings}')
-        stocks_size = pd.DataFrame(match_tradings.groupby('stock_ticker').size())
-        print(type(stocks_size))
-        print(stocks_size)
-        print(list(this_members_tradings))
-        temp = stocks_size.isin(list(this_members_tradings))
-        print(temp)
-        return stocks_size
+        stocks_size = list(match_tradings.groupby('stock_ticker').size().sort_values(ascending=False).index)
+        # print(stocks_size)
+        stocks_list = [s for s in stocks_size if s not in this_members_tradings]
+        # print(stocks_list)
+        return stocks_list
 
 
 if __name__ == '__main__':
