@@ -122,7 +122,7 @@ class RecommendStocks():
     def hook_process(self, email):
         print('START')
         similarity = self.similarity(email)
-        # print(f'similarity: \n{similarity}')
+        print(f'get similarity complete')
         sim_members = self.sortHundred(similarity)
         print(f'similar members: \n{sim_members}')
         match_tradings = self.similarMembersTradings(sim_members, email)
@@ -192,7 +192,7 @@ class RecommendStocks():
 
     @staticmethod
     def sortHundred(sim_dict):
-        sim_members = sorted(sim_dict.items(), key=operator.itemgetter(1), reverse=True)[:100]
+        sim_members = sorted(sim_dict.items(), key=operator.itemgetter(1), reverse=True)[:50]
         return sim_members
 
     @staticmethod
@@ -205,9 +205,10 @@ class RecommendStocks():
         for mem, prob in sim_members:
             match_tradings = pd.concat([match_tradings, tradings[tradings['email'] == mem]])
         # print(f'match_tradings: \n{match_tradings}')
-        stocks_size = match_tradings.groupby('stock_ticker').size()
+        stocks_size = pd.DataFrame(match_tradings.groupby('stock_ticker').size())
         print(type(stocks_size))
-        print(type(this_members_tradings))
+        print(stocks_size)
+        print(list(this_members_tradings))
         temp = stocks_size.isin(list(this_members_tradings))
         print(temp)
         return stocks_size
