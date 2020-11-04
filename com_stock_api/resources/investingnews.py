@@ -1,4 +1,4 @@
-from com_stock_api.ext.db import db, openSession
+from com_stock_api.ext.db import db, openSession, engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 import pandas as pd
@@ -16,6 +16,8 @@ import csv
 from flask_restful import Resource, reqparse
 from sqlalchemy import and_,or_,func
 import json
+from matplotlib import pyplot as plt
+
 
 # =============================================================
 # =============================================================
@@ -152,22 +154,7 @@ class InvestingPro:
         news_with_scores.to_csv(output_file)
         print("Completed saving ", file_name)
         print(news_with_scores.head())
-    def get_graph(self, file):
-        x=[]
-        y=[]
-        with open(file, 'r') as csvfile:
-            plots= csv.reader(csvfile, delimiter=',')
-            for row in plots:
-                # x.append(str(row[0]))
-                x=row[0]
-                y=re.sub('[^0-9]', '', row[-1]) 
-                print("x and y: ", x, y)
-                # y.append(float(y))
-        # plt.plot(x,y, marker='o')
-        # plt.title(self.ticker + 'sentiment Analysis from stock news')
-        # plt.xlabel('date')
-        # plt.ylabel('compounds')
-        # plt.show()
+    
 '''        
 if __name__=='__main__':
     path = os.path.abspath(__file__+"/.."+"/data/")
@@ -218,7 +205,7 @@ class InvestingDto(db.Model):
                 pos=\'{self.pos}\',neu=\'{self.neu}\', compound=\'{self.compound}\',)'
 
 
-    @property
+    
     def json(self):
         return {
             'id': self.id,
@@ -292,6 +279,7 @@ class InvestingDao(InvestingDto):
     @classmethod
     def find_by_ticker(cls, tic):
         return session.query(InvestingDto).filter(InvestingDto.ticker.ilike(tic))
+        
     @classmethod
     def find_by_period(cls,tic, start_date, end_date):
         return session.query(InvestingDto).filter(and_(InvestingDto.ticker.ilike(tic) ,date__range=(start_date, end_date)))
@@ -302,6 +290,7 @@ class InvestingDao(InvestingDto):
         df = pd.read_sql(sql.statement, sql.session.bind)
         df = df[df['ticker']==stock.ticker]
         return json.loads(df.to_json(orient='records'))
+
 
 # =============================================================
 # =============================================================
@@ -375,6 +364,8 @@ class AppleSentiment(Resource):
         data = InvestingDao.find_all_by_ticker(stock)
         return data, 200
 
+
+
 class TeslaSentiment(Resource):
     @staticmethod
     def get():
@@ -383,3 +374,88 @@ class TeslaSentiment(Resource):
         stock.ticker = 'TSLA'
         data = InvestingDao.find_all_by_ticker(stock)
         return data, 200
+
+
+
+
+#This class should operate after saving data into mariadb
+class InvestingGraph(Resource):
+    
+    @staticmethod
+    def get():
+        ls = InvestingDao.apple_dataframe()
+        for i in ls:
+            print("i:", i)
+
+    '''
+    @staticmethod
+    def apple_dataframe():
+        query = InvestingDao.find_by_ticker('AAPL')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        print(df.columns)
+        #Calculate mean values for each components; pos, neu, neg, compound
+        means = df.reset_index().groupby(pd.Grouper(key='date', freq='D')).mean().dropna()
+        print(means)
+        return means
+    '''
+    @classmethod
+    def apple_dataframe(cls):
+        print("============apple dataframe============")
+        df = pd.read_sql_table('Investing_News', engine.connect())
+        print(df.head())
+        #Calculate mean values for each components; pos, neu, neg, compound
+        means = df.resample('D', on='date').mean().dropna()
+        # means['date'] = df.resample('D', on='date').index
+
+        #======안됨 =====
+        dates = means.date.unique()
+        means2 = means.set_index('date').resample('1D').ffill().reset_index()
+        means2.Type = means2.Type.where(means2.date.isin(dates), '')
+
+
+        print(means2.head())
+        data = json.loads(means2.to_json(orient='records'))
+        print(data)
+        return data 
+    '''
+    Index(['id', 'date', 'ticker', 'link', 'headline', 'neg', 'pos', 'neu',
+        'compound'],
+        dtype='object')
+                index     id       neg       pos       neu  compound
+    date                                                            
+    2020-01-01    0.0    1.0  0.046000  0.071000  0.883000  0.743000
+    2020-01-02    3.0    4.0  0.038200  0.106000  0.855400  0.931120
+    2020-01-03    6.5    7.5  0.064000  0.085500  0.850000  0.001450
+    2020-01-04    8.5    9.5  0.028500  0.083500  0.887500  0.972650
+    2020-01-06   11.0   12.0  0.072667  0.147333  0.779333  0.902700
+    '''
+    
+    @staticmethod
+    def draw_graph(df):
+
+        # dates = df.reset_index()['date']
+        # df.plot(dates, df.reset_index()['pos'], color = 'red', kind="bar")
+        # plt.title("News Sentiment for Apple")
+        # plt.xlabel("Date")
+        # plt.ylabel("Sentiment")
+
+        # plt.show()
+       
+
+
+        ax=df.reset_index()["pos"].plot.bar(color='red')
+        # ax1=df.reset_index()["neg"].plot.bar(x=ax, color='blue')
+
+        ax.set_xticks(df.reset_index()[0::15])
+        # ax1.set_xticklabels(df.reset_index()[0::15], rotation=45)
+
+        # ax1.set_ylabel("sentiment score")
+        # ax1.legend()
+
+        plt.show()
+
+if __name__=='__main__':
+    apple = InvestingGraph()
+    result = apple.apple_dataframe()
+    # apple.draw_graph(result)
+
