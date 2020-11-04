@@ -225,6 +225,7 @@ class Comment(Resource):
    
     @staticmethod
     def delete(id):
+        print('comment DELETE')
         try:
             CommentDao.delete_comment(id)
             return {'code': 0, 'message': 'SUCCESS'}, 200
