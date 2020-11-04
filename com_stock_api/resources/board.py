@@ -207,7 +207,7 @@ class BoardDao(BoardDto):
         Session = openSession()
         session = Session()
         board = session.query(BoardDto)\
-        .filter(BoardDto.email==board.email)\
+        .filter(BoardDto.id==board.id)\
         .update({BoardDto.title: board['title'], BoardDto.content: board['content']})
         session.commit()
         session.close()

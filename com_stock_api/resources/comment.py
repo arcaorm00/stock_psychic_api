@@ -194,7 +194,7 @@ parser.add_argument('comment_step', type=int)
 class Comment(Resource):
     
     @staticmethod
-    def post():
+    def post(id):
         body = request.get_json()
         print(f'body: {body}')
         comment = CommentDto(**body)

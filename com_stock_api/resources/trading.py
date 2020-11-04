@@ -15,6 +15,8 @@ from flask_restful import Resource, reqparse
 import random
 from sqlalchemy import func
 
+import datetime
+
 
 
 '''
@@ -124,7 +126,7 @@ class TradingPro:
         for idx, member in self.members.iterrows():
             members_trading_qty = int(member['stock_qty'])
 
-            if int(member['balance']) <= 0 or int(member['exited']) == 1: continue
+            if int(member['balance']) <= 0: continue
             
             # tickers의 값 중 회원의 stock_qty 수만큼 랜덤 추출
             random_ticker = random.choices(tickers, k=members_trading_qty)
@@ -139,8 +141,12 @@ class TradingPro:
                 if (self.nasdaqs['ticker'] == tick).any():
                     stock_type = 'NASDAQ'
                     nasdaq = self.nasdaqs[self.nasdaqs['ticker'] == tick]
-
-                    trading_date = random.choice(self.nasdaqs['date'])
+                    
+                    trading_date = ''
+                    while True:
+                        trading_date = random.choice(self.nasdaqs['date'])
+                        if trading_date > datetime.datetime.strptime('2017-02-28 00:00:00', '%Y-%m-%d %H:%M:%S'):
+                            break
                     high = float(nasdaq[nasdaq['date'] == trading_date]['high'])
                     low = float(nasdaq[nasdaq['date'] == trading_date]['low'])
                     price = round(random.uniform(high, low), 4)
@@ -162,7 +168,6 @@ class TradingPro:
                 trading_arr.append(result)
        
         trading_df = pd.DataFrame(trading_arr)
-        print(trading_df[:50])
         return trading_df
 
 
@@ -190,7 +195,7 @@ class TradingDto(db.Model):
     stock_ticker: str = db.Column(db.String(50), nullable=False)
     stock_qty: int = db.Column(db.Integer, nullable=False)
     price: float = db.Column(db.FLOAT, nullable=False)
-    trading_date: str = db.Column(db.DATE, default=datetime.datetime.now())
+    trading_date: str = db.Column(db.String(50), default=datetime.datetime.now())
 
     member = db.relationship('MemberDto', back_populates='tradings')
     # yahoo_finance = db.relationship('YHFinanceDto', back_populates='tradings')
@@ -212,13 +217,13 @@ class TradingDto(db.Model):
     #     self.trading_date = trading_date
 
     def __repr__(self):
-        return 'Trading(trading_id={}, member_id={}, stock_type={}, stock_ticker={}, stock_qty={}, price={}, trading_date={})'.format(self.id, self.member_id, self.stock_type, self.stock_ticker, self.stock_qty, self.price, self.trading_date)
+        return 'Trading(trading_id={}, email={}, stock_type={}, stock_ticker={}, stock_qty={}, price={}, trading_date={})'.format(self.id, self.email, self.stock_type, self.stock_ticker, self.stock_qty, self.price, self.trading_date)
     
     @property
     def json(self):
         return {
             'id': self.id,
-            'member_id': self.member_id,
+            'email': self.email,
             'stock_type': self.stock_type,
             'stock_ticker': self.stock_ticker,
             'stock_qty': self.stock_qty,
@@ -274,6 +279,7 @@ class TradingDao(TradingDto):
     def save(trading):
         db.session.add(trading)
         db.session.commit()
+        session.close()
 
     @staticmethod
     def insert_many():

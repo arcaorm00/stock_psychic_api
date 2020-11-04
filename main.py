@@ -52,12 +52,6 @@ with app.app_context():
     if count == (0,):
         BoardDao.insert_many()
 
-with app.app_context():
-    count = TradingDao.count()
-    print(f'Tradings Total Count is {count}')
-    if count == (0,):
-        TradingDao.insert_many()
-
 
 with app.app_context():
     count1 = USCovidDao.count()
@@ -85,7 +79,7 @@ with app.app_context():
     if count5 == 0:
         NasdaqPredictionDao.bulk()
 
-        
+
 
 with app.app_context():
     news_count = NewsDao.count()
@@ -122,5 +116,11 @@ with app.app_context():
         RecentNewsDao.bulk()
         #rn = RecentNewsDao()
         #rn.bulk()
+
+with app.app_context():
+    count = TradingDao.count()
+    print(f'Tradings Total Count is {count}')
+    if count == (0,):
+        TradingDao.insert_many()
 
 initialize_routes(api)
