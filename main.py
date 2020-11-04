@@ -13,12 +13,13 @@ from com_stock_api.resources.nasdaq_prediction import NasdaqPredictionDao
 from com_stock_api.resources.uscovid import USCovidDao
 from com_stock_api.resources.yhfinance import YHFinanceDao
 from com_stock_api.resources.investingnews import InvestingDao
+from com_stock_api.resources.recent_news import RecentNasdaqNewsDao
 
 from com_stock_api.resources.korea_news import NewsDao
 from com_stock_api.resources.korea_covid import KoreaDao
 from com_stock_api.resources.korea_finance import StockDao
 from com_stock_api.resources.korea_finance_recent import RecentStockDao
-from com_stock_api.resources.korea_news_recent import RecentNewsDao
+from com_stock_api.resources.korea_news_recent import RecentKospiNewsDao
 from com_stock_api.resources.kospi_pred import KospiDao
 
 from flask_cors import CORS
@@ -69,10 +70,10 @@ with app.app_context():
     if count3[0] == 0:
         InvestingDao.bulk()
 
-    count4 = RecentNewsDao.count()
+    count4 = RecentNasdaqNewsDao.count()
     print(f'Recent news Total Count is {count4[0]}')
     if count4[0] == 0:
-        RecentNewsDao.bulk()
+        RecentNasdaqNewsDao.bulk()
 
     count5 = NasdaqPredictionDao.count()
     print(f'Nasdap Prediction Total Count is {count5}')
@@ -110,10 +111,10 @@ with app.app_context():
         #rs = RecentStockDao()
         #rs.bulk()
     
-    recent_news_count = RecentNewsDao.count()
+    recent_news_count = RecentKospiNewsDao.count()
     print(f'******* Recent News Count is {recent_news_count}*****')
     if recent_news_count[0] == 0:
-        RecentNewsDao.bulk()
+        RecentKospiNewsDao.bulk()
         #rn = RecentNewsDao()
         #rn.bulk()
 

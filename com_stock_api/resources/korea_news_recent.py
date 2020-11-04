@@ -166,7 +166,7 @@ session= Session()
 
 
 
-class RecentNewsDao(NewsDto):
+class RecentKospiNewsDao(NewsDto):
     
     # def __init__(self):
     #     self.data = os.path.abspath(__file__+"/.."+"/data/")
@@ -234,7 +234,7 @@ class RecentNewsDao(NewsDto):
 
 
 if __name__ == "__main__":
-    RecentNewsDao.bulk()
+    RecentKospiNewsDao.bulk()
     #n = RecentNewsDao()
     #n.bulk()
 
@@ -275,7 +275,7 @@ class News(Resource):
     def get(id):
         print(f'News {id} added')
         try:
-            news = RecentNewsDao.find_by_id(id)
+            news = RecentKospiNewsDao.find_by_id(id)
             if news:
                 return news.json()
         except Exception as e:
@@ -296,12 +296,12 @@ class News_(Resource):
     
     @staticmethod
     def get():
-        rn = RecentNewsDao()
+        rn = RecentKospiNewsDao()
         rn.insert('naver_news')
     
     @staticmethod
     def get():
-        data = RecentNewsDao.find_all()
+        data = RecentKospiNewsDao.find_all()
         return data, 200
 
 class Auth(Resource):
@@ -309,7 +309,7 @@ class Auth(Resource):
     def post():
         body = request.get_json()
         news = NewsDto(**body)
-        RecentNewsDao.save(news)
+        RecentKospiNewsDao.save(news)
         id = news.id
 
         return {'id': str(id)}, 200
@@ -324,5 +324,5 @@ class Access(Resource):
         news.headline = args.headline
         print(news.id)
         print(news.headline)
-        data = RecentNewsDao.login(news)
+        data = RecentKospiNewsDao.login(news)
         return data[0], 200

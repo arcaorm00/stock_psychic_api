@@ -132,7 +132,7 @@ class RecommendStockPreprocessing():
 
 
 
-class RecommendStocks():
+class RecommendStocksWithSimilarity():
 
     def hook_process(self, email):
         print('START')
@@ -228,7 +228,7 @@ class RecommendStocks():
 
 
 if __name__ == '__main__':
-    rs = RecommendStocks()
+    rs = RecommendStocksWithSimilarity()
     rs.hook_process(email='15660679@gmail.com')
     
 
@@ -391,7 +391,7 @@ class RecommendStock(Resource):
             print(e)
             return {'message': 'Recommend Stock not found'}, 404
     
-class Boards(Resource):
+class RecommendStocks(Resource):
     
     def post(self):
         rs_dao = RecommendStockDao()

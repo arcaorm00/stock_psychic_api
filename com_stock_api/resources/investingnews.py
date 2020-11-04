@@ -401,20 +401,21 @@ class InvestingGraph(Resource):
     @classmethod
     def apple_dataframe(cls):
         print("============apple dataframe============")
-        df = pd.read_sql_table('Investing_News', engine.connect())
+        df = pd.read_sql_table('investing_news', engine.connect())
         print(df.head())
         #Calculate mean values for each components; pos, neu, neg, compound
         means = df.resample('D', on='date').mean().dropna()
         # means['date'] = df.resample('D', on='date').index
 
         #======안됨 =====
-        dates = means.date.unique()
-        means2 = means.set_index('date').resample('1D').ffill().reset_index()
-        means2.Type = means2.Type.where(means2.date.isin(dates), '')
+        # dates = means.date.unique()
+        # means2 = means.set_index('date').resample('1D').ffill().reset_index()
+        # means2.Type = means2.Type.where(means2.date.isin(dates), '')
+        means['date'] = means.index
+        means = means.astype({'date': 'string'})
 
-
-        print(means2.head())
-        data = json.loads(means2.to_json(orient='records'))
+        print(means.head())
+        data = json.loads(means.to_json(orient='records'))
         print(data)
         return data 
     '''
