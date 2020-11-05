@@ -114,7 +114,7 @@ class TradingPro:
                     trading_date = ''
                     while True:
                         trading_date = random.choice(self.nasdaqs['date'])
-                        if trading_date > datetime.datetime.strptime('2017-02-28 00:00:00', '%Y-%m-%d %H:%M:%S'):
+                        if trading_date > datetime.datetime.strptime('2017-02-28', '%Y-%m-%d'):
                             break
                     high = float(nasdaq[nasdaq['date'] == trading_date]['high'])
                     low = float(nasdaq[nasdaq['date'] == trading_date]['low'])

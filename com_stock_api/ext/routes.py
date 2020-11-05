@@ -48,7 +48,7 @@ def initialize_routes(api):
     api.add_resource(USCovid, '/nasdaq/uscovid')
 
     api.add_resource(KoreaCovid,'/kospi/koreacovid/<string:id>')
-    api.add_resource(KoreaCovids,'/ksopi/koreacovids')
+    api.add_resource(KoreaCovids,'/kospi/koreacovids')
     api.add_resource(News, '/kospi/news')
     api.add_resource(News_, '/kospi/news_') 
     api.add_resource(lgchem,'/kospi/lgchem')

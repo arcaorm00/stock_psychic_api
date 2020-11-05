@@ -174,7 +174,7 @@ class RecentNewsPro:
 # =============================================================
 
 class RecentNewsDto(db.Model):
-    __tablename__ = 'Recent_News'
+    __tablename__ = 'US_Recent_News'
     __table_args__={'mysql_collate':'utf8_general_ci'}
     id: int = db.Column(db.Integer, primary_key = True, index = True)
     date: str = db.Column(db.Date)
@@ -196,7 +196,7 @@ class RecentNewsDto(db.Model):
         self.content = content
 
     def __repr__(self):
-        return f'RecentNews(id=\'{self.id}\', date=\'{self.date}\', time=\'{self.time}\',\
+        return f'US_RecentNews(id=\'{self.id}\', date=\'{self.date}\', time=\'{self.time}\',\
             ticker=\'{self.ticker}\',link=\'{self.link}\', headline=\'{self.headline}\'\
                 image=\'{self.image}\', content=\'{self.content}\')'
 

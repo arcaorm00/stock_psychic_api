@@ -110,13 +110,13 @@ class NasdaqPredictionDao(NasdaqPredictionDto):
         db.session.add(data)
         db.session.commit()
 
-    @staticmethod
+    @classmethod
     def delete(cls, id):
         data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
         
-    @staticmethod
+    @classmethod
     def find_all(cls):
         sql = cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
