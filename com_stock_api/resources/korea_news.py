@@ -14,6 +14,7 @@ from pathlib import Path
 from flask import jsonify
 import pandas as pd
 import json
+from matplotlib import pyplot as plt
 
 
 
@@ -50,7 +51,7 @@ class NewsDto(db.Model):
         return f'id={self.id},date={self.date}, headline={self.headline},\
             url={self.url},ticker={self.ticker},label={self.label}'
             
-    @property
+
     def json(self):
         return {
             'id':self.id,
@@ -116,6 +117,17 @@ class NewsDao(NewsDto):
         data = cls.qeury.get(headline)
         db.session.delete(data)
         db.session.commit()
+
+    @classmethod
+    def find_by_ticker(cls, tic):
+        return session.query(NewsDto).filter(NewsDto.ticker.ilike(tic))
+
+    @classmethod
+    def find_all_by_ticker(cls, stock):
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        df = df[df['ticker'] == stock.ticker]
+        return json.loads(df.to_json(orient='records'))
     
     @classmethod
     def find_all(cls):
@@ -145,10 +157,6 @@ class NewsDao(NewsDto):
         return session.query(NewsDto).filter(NewsDto.url.like(url)).one()
 
     @classmethod
-    def find_by_ticker(cls,ticker):
-        return session.query(NewsDto).filter(NewsDto.ticker.like(ticker)).one()
-
-    @classmethod
     def find_by_label(cls,label):
         return session.query(NewsDto).filter(NewsDto.label.like(label)).one()
 
@@ -174,48 +182,88 @@ parser.add_argument('label', type=float, required=True, help='This field cannot 
 class News(Resource):
 
     @staticmethod
-    def post():
-        args = parser.parse_args()
-        print(f'News {args["id"]} added')
-        parmas = json.loads(request.get_data(), encoding='utf-8')
-        if len (parmas) == 0:
-            return 'No parameter'
-        
-        params_str=''
-        for key in parmas.keys():
-            params_str += 'key:{}, value:{}<br>'.format(key, parmas[key])
-        return {'code':0, 'message': 'SUCCESS'}, 200
-    
-    @staticmethod
-    def get(id: int):
-        print(f'News {id} added')
+    def post(self):
+        data = self.parser.parse_args()
+        lnews = NewsDto(data['date'],data['headline'],data['content'],data['url'],data['ticker'],data['label'])
         try:
-            news = NewsDao.find_by_id(id)
-            if news:
-                return news.json()
-        except Exception as e:
-            return {'message': 'Item not found'}, 404
-    @staticmethod
-    def update():
-        args = parser.arse_args()
-        print(f'News {args["id"]} updated')
-        return {'code':0, 'message':'SUCCESS'}, 200
+            lnews.save(data)
+            return {'code':0, 'message':'SUCCESS'},200
+        except:
+            return {'message': 'An error occured inserting recent news'}, 500
+        return lnews.json(), 201
+    
     
     @staticmethod
-    def delete():
+    def get(ticker):
         args = parser.parse_args()
-        print(f'News {args["id"]} deleted')
-        return {'code':0, 'message':'SUCCESS'}, 200
-
-class News_(Resource):
-    
-    @staticmethod
-    def post():
-        nd = NewsDao()
-        nd.insert('naver_news')
-    
-    @staticmethod
-    def get():
-        data = NewsDao.find_all()
+        stock = NewsVo()
+        stock.ticker = ticker
+        data = NewsDao.find_all_by_ticker(stock)
         return data, 200
 
+    def put(self, id):
+        data = News.parser.parse_args()
+        stock = NewsDao.find_by_id(id)
+
+        stock.date = data['date']
+        stock.ticker = data['ticker']
+        stock.url = data['url']
+        stock.headline = data['headline']
+        stock.label=data['label']
+        stock.save()
+        return stock.json()
+
+class News_(Resource):
+    def get(self):
+        return NewsDao.find_all(), 200
+    
+    # @staticmethod
+    # def post():
+    #     nd = NewsDao()
+    #     nd.insert('naver_news')
+    
+    # @staticmethod
+    # def get():
+    #     data = NewsDao.find_all()
+    #     return data, 200
+
+
+class Lgchem_Label(Resource):
+    
+    @classmethod
+    def get(cls):
+        query = NewsDao.find_by_ticker('051910')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        means = df.resample('D', on='date').mean().dropna()
+        print(means)
+        means.insert(0, 'date', means.index)
+        data = json.loads(means.to_json(orient='records'))
+        #print(data)
+        return data, 200
+
+"""
+                   id     label
+date                            
+2020-01-02  691.200000  0.444000
+"""
+
+
+class Lginnotek_Label(Resource):
+    
+    @classmethod
+    def get(cls):
+        query = NewsDao.find_by_ticker('011070')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        means = df.resample('D', on='date').mean().dropna()
+        print(means)
+        means.insert(0, 'date', means.index)
+        data = json.loads(means.to_json(orient='records'))
+        #print(data)
+        return data, 200
+
+
+    
+
+# if __name__ =='__main__':
+#     r = Lgchem_Label()
+#     r.get()

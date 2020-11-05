@@ -19,7 +19,7 @@ from com_stock_api.resources.korea_news import NewsDao
 from com_stock_api.resources.korea_covid import KoreaDao
 from com_stock_api.resources.korea_finance import StockDao
 from com_stock_api.resources.korea_news_recent import RNewsDao
-# from com_stock_api.resources.kospi_pred import KospiDao
+from com_stock_api.resources.kospi_pred import KospiDao
 
 from flask_cors import CORS
 
@@ -99,7 +99,7 @@ with app.app_context():
     recent_stock_count = StockDao.count()
     print(f'****Stock Count is {recent_stock_count} ****')
     if recent_stock_count[0] == 0:
-        #StockDao.bulk()
+        # StockDao.bulk()
         rs = StockDao()
         rs.bulk()
     
@@ -110,13 +110,12 @@ with app.app_context():
         rn = RNewsDao()
         rn.bulk()
 
-    # pred_count = KospiDao.count()
-    # print(f'***** Pred Count is {pred_count} *********')
-    # if pred_count[0] == 0:
-    #     #KospiDao.bulk()
-    #     kp = KospiDao()
-    #     kp.bulk()
-
+    pred_count = KospiDao.count()
+    print(f'***** Pred Count is {pred_count} *********')
+    if pred_count[0] == 0:
+        #KospiDao.bulk()
+        kp = KospiDao()
+        kp.bulk()
 
 
 with app.app_context():

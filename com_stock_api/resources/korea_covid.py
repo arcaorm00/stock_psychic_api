@@ -51,10 +51,10 @@ class Covidedit():
 
         df_all.to_csv(path + '/kor&seoul.csv',encoding='UTF-8')
 
-if __name__ == '__main__':
-    #Covidedit()
-    c=Covidedit()
-    c.csv()
+# if __name__ == '__main__':
+#     #Covidedit()
+#     c=Covidedit()
+#     c.csv()
 
 class KoreaDto(db.Model):
     __tablename__ = 'korea_covid'
@@ -163,7 +163,7 @@ class KoreaDao(KoreaDto):
     
     @classmethod
     def find_by_date(cls, date):
-        return session.query.filter(KoreaDto.date.like(date)).one()
+        return session.query(KoreaDto).filter(KoreaDto.date.like(date)).all()
 
 
 
@@ -186,51 +186,36 @@ parser.add_argument('total_death',type=int, required=True,help='This field canno
 class KoreaCovid(Resource):
     
     @staticmethod
-    def post():
-        args = parser.parse_args()
-        print(f'Covid {args["id"]} added')
-        params = json.loads(request.get_data(), encoding='utf-8')
-        if len (params) == 0:
-            return 'No parameter'
-        params_str = ''
-        for key in params.keys():
-            params_str += 'key: {}, value:{}<br>'.format(key, params[key])
-        return {'code':0, 'message':'SUCCESS'}, 200
+    def post(self):
+        data = self.parser.parse_args()
+        kcovid = KoreaDto(data['date'],data['seoul_cases'],data['seoul_death'],data['total_cases'],data['total_death'])
+        try:
+            kcovid.save(data)
+            return {'code':0, 'message':'SUCCESS'},200
+        except:
+            return {'message': 'An error occured inserting recent news'}, 500
+        return kcovid.json(), 201
         
     
-    @staticmethod
-    def get(id: int):
-        print(f'Covid {id} added')
-        try:
-            covid = KoreaDao.find_by_id(id)
-            if covid:
-                return covid.json()
-        except Exception as e:
-            return {'message': 'Item not found'}, 404
+    def get(self):
+        kcovid = KoreaDao.find_all()
+        return kcovid , 200
+
     
-    @staticmethod
-    def update():
-        args = parser.arse_args()
-        print(f'Covid {args["id"]} updated')
-        return {'code':0, 'message':'SUCCESS'}, 200
-    
-    @staticmethod
-    def delete():
-        args = parser.parse_args()
-        print(f'Covid {args["id"]} deleted')
-        return {'code':0, 'message':'SUCCESS'}, 200
+    def put(self, id):
+        data = KoreaCovid.parser.parse_args()
+        
+        kcovid = KoreaDao.find_by_id(id)
+        kcovid.date = data['date']
+        kcovid.total_cases = data['total_cases']
+        kcovid.total_deaths = data['total_death']
+        kcovid.seodul_cases = data['seoul_cases']
+        kcovid.seoul_deaths = data['seoul_death']
+        kcovid.save()
+        return kcovid.json()
 
 class KoreaCovids(Resource):
-
-    @staticmethod
-    def post():
-        kd = KoreaDao()
-        kd.insert_many('korea_covid')
-    
-    @staticmethod
-    def get():
-        print('======kc========')
-        data = KoreaDao.find_all()
-        return data, 200
+    def get(self):
+        return KoreaDao.find_all(), 200
 
 

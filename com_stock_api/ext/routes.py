@@ -13,8 +13,9 @@ from com_stock_api.resources.uscovid import USCovid, USCovids
 from com_stock_api.resources.korea_covid import KoreaCovid,KoreaCovids
 from com_stock_api.resources.kospi_pred import Kospi,Kospis,lgchem_pred,lginnotek_pred
 from com_stock_api.resources.korea_finance import Stock,Stocks,lgchem,lginnotek
-from com_stock_api.resources.korea_news import News,News_
+from com_stock_api.resources.korea_news import News,News_,Lgchem_Label,Lginnotek_Label
 from com_stock_api.resources.korea_news_recent import RNews,RNews_, lgchemNews,lginnoteknews
+
 
 from com_stock_api.resources.home import Home
 
@@ -47,13 +48,15 @@ def initialize_routes(api):
     api.add_resource(TeslaSentiment, '/nasdaq/tesla_sentiment')
     api.add_resource(USCovid, '/nasdaq/uscovid')
 
-    api.add_resource(KoreaCovid,'/kospi/koreacovid/<string:id>')
-    api.add_resource(KoreaCovids,'/kospi/koreacovids')
-    api.add_resource(News, '/kospi/news')
-    api.add_resource(News_, '/kospi/news_') 
-    api.add_resource(lgchem,'/kospi/lgchem')
-    api.add_resource(lginnotek,'/kospi/lginnotek')
+    api.add_resource(KoreaCovid,'/kospi/koreacovid')
+
     api.add_resource(lgchemNews,'/kospi/lgchemNews')
     api.add_resource(lginnoteknews,'/kospi/lginnoteknews')
+    api.add_resource(Lgchem_Label, '/kospi/lgchem_label')
+    api.add_resource(Lginnotek_Label, '/kospi/lginnotek_label')
+
+    api.add_resource(lgchem,'/kospi/lgchem')
+    api.add_resource(lginnotek,'/kospi/lginnotek')
+
     api.add_resource(lgchem_pred, '/kospi/lgchem_pred')
     api.add_resource(lginnotek_pred, '/kospi/lginnotek_pred')

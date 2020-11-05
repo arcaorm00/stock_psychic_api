@@ -102,8 +102,11 @@ class CommentDao(CommentDto):
 
     @classmethod
     def find_maxnum_for_board(cls, board_id):
-        sql = cls.query.filter(max(cls.id)).filter(cls.board_id == board_id)
+        print(f'board_id: {board_id}')
+        sql = cls.query(max(cls.id)+1).filter(cls.board_id == board_id).one()
+        print(sql)
         df = pd.read_sql(sql.statement, sql.session.bind)
+        print(df)
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
@@ -179,6 +182,7 @@ class Comment(Resource):
         body = request.get_json()
         print(f'body: {body}')
         comment = CommentDto(**body)
+        # comment.comment_ref = CommentDao.find_maxnum_for_board(comment.board_id)
         CommentDao.save(comment)
         content = comment.comment
         return {'comment': str(content)}, 200
