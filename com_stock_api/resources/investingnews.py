@@ -355,68 +355,49 @@ class Investing(Resource):
         InvestingDao.delete(args['id'])
         return {'code' : 0 , 'message' : 'SUCCESS'}, 200
 
+#This class should operate after saving data into mariadb
 class AppleSentiment(Resource):
+
     @staticmethod
     def get():
         print("=====investingnews.py / AppleSentiment's get")
-        stock = InvestingVo()
-        stock.ticker = 'AAPL'
-        data = InvestingDao.find_all_by_ticker(stock)
-        return data, 200
-
-
+        query = InvestingDao.find_by_ticker('AAPL')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        #Calculate mean values for each components; pos, neu, neg, compound
+        means = df.resample('D', on='date').mean().dropna()
+        means.insert(0, 'date', means.index)
+        data = json.loads(means.to_json(orient='records'))
+        return data,200
 
 class TeslaSentiment(Resource):
+
     @staticmethod
     def get():
         print("=====investingnews.py / TeslaSentiment's get")
-        stock = InvestingVo()
-        stock.ticker = 'TSLA'
-        data = InvestingDao.find_all_by_ticker(stock)
-        return data, 200
+        # df = pd.read_sql_table('Investing_News', engine.connect())
+        query = InvestingDao.find_by_ticker('TSLA')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        #Calculate mean values for each components; pos, neu, neg, compound
+        means = df.resample('D', on='date').mean().dropna()
+        means.insert(0, 'date', means.index)
+        data = json.loads(means.to_json(orient='records'))
+        return data,200
 
 
 
 
-#This class should operate after saving data into mariadb
 class InvestingGraph(Resource):
     
-    @staticmethod
-    def get():
-        ls = InvestingDao.apple_dataframe()
-        for i in ls:
-            print("i:", i)
-
-    '''
-    @staticmethod
-    def apple_dataframe():
-        query = InvestingDao.find_by_ticker('AAPL')
-        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
-        print(df.columns)
-        #Calculate mean values for each components; pos, neu, neg, compound
-        means = df.reset_index().groupby(pd.Grouper(key='date', freq='D')).mean().dropna()
-        print(means)
-        return means
-    '''
     @classmethod
     def apple_dataframe(cls):
         print("============apple dataframe============")
-        df = pd.read_sql_table('investing_news', engine.connect())
-        print(df.head())
+        # df = pd.read_sql_table('Investing_News', engine.connect())
+        query = InvestingDao.find_by_ticker('AAPL')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
         #Calculate mean values for each components; pos, neu, neg, compound
         means = df.resample('D', on='date').mean().dropna()
-        # means['date'] = df.resample('D', on='date').index
-
-        #======안됨 =====
-        # dates = means.date.unique()
-        # means2 = means.set_index('date').resample('1D').ffill().reset_index()
-        # means2.Type = means2.Type.where(means2.date.isin(dates), '')
-        means['date'] = means.index
-        means = means.astype({'date': 'string'})
-
-        print(means.head())
+        means.insert(0, 'date', means.index)
         data = json.loads(means.to_json(orient='records'))
-        print(data)
         return data 
     '''
     Index(['id', 'date', 'ticker', 'link', 'headline', 'neg', 'pos', 'neu',
@@ -455,8 +436,8 @@ class InvestingGraph(Resource):
 
         plt.show()
 
-if __name__=='__main__':
-    apple = InvestingGraph()
-    result = apple.apple_dataframe()
-    # apple.draw_graph(result)
+# if __name__=='__main__':
+#     apple = InvestingGraph()
+#     result = apple.apple_dataframe()
+#     apple.draw_graph(result)
 

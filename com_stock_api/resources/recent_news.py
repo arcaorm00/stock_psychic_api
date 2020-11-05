@@ -226,7 +226,7 @@ class RecentNewsVo:
 
 Session = openSession()
 session = Session()
-class RecentNasdaqNewsDao(RecentNewsDto):
+class RecentNewsDao(RecentNewsDto):
 
     @staticmethod
     def count():
@@ -326,13 +326,13 @@ class RecentNews(Resource):
         print("=====recent_news.py / recent_news' get")
         stock = RecentNewsVo
         stock.ticker = ticker
-        data = RecentNasdaqNewsDao.find_all_by_ticker(stock)
+        data = RecentNewsDao.find_all_by_ticker(stock)
         return data, 200
 
     @staticmethod
     def put():
         data = RecentNews.parser.parse_args()
-        stock = RecentNasdaqNewsDao.find_by_id(id)
+        stock = RecentNewsDao.find_by_id(id)
 
         stock.date = data['date']
         stock.time = data['time']
@@ -348,7 +348,7 @@ class RecentNews(Resource):
     def delete():
         args = parser.parse_args()
         print(f'Headline {args["headline"]} on date {args["date"]} deleted')
-        RecentNasdaqNewsDao.delete(args['id'])
+        RecentNewsDao.delete(args['id'])
         return {'code' : 0 , 'message' : 'SUCCESS'}, 200
 
 class AppleNews(Resource):
@@ -370,12 +370,12 @@ class AppleNews(Resource):
         print("=====recent_news.py / tesla_news' get")
         stock = RecentNewsVo
         stock.ticker = 'AAPL'
-        data = RecentNasdaqNewsDao.find_all_by_ticker(stock)
+        data = RecentNewsDao.find_all_by_ticker(stock)
         return data, 200
     @staticmethod
     def put(id):
         data = RecentNews.parser.parse_args()
-        stock = RecentNasdaqNewsDao.find_by_id(id)
+        stock = RecentNewsDao.find_by_id(id)
 
         stock.date = data['date']
         stock.time = data['time']
@@ -406,13 +406,13 @@ class TeslaNews(Resource):
         print("=====recent_news.py / tesla_news' get")
         stock = RecentNewsVo
         stock.ticker = 'TSLA'
-        data = RecentNasdaqNewsDao.find_all_by_ticker(stock)
+        data = RecentNewsDao.find_all_by_ticker(stock)
         return data, 200
 
     @staticmethod
     def put(id):
         data = RecentNews.parser.parse_args()
-        stock = RecentNasdaqNewsDao.find_by_id(id)
+        stock = RecentNewsDao.find_by_id(id)
 
         stock.date = data['date']
         stock.time = data['time']
