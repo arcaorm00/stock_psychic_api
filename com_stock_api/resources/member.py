@@ -341,8 +341,8 @@ class MemberModelingDataPreprocessing:
         this.train = this.train
         return this
 
-    # @staticmethod
-    def age_ordinal(self, this):
+    @staticmethod
+    def age_ordinal(this):
         train = this.train
         train['age'] = train['age'].fillna(-0.5)
         bins = [-1, 18, 25, 30, 35, 40, 45, 50, 60, np.inf] # 범위
@@ -564,14 +564,12 @@ class MemberDao(MemberDto):
     def find_high_proba_churn(cls):
         sql = cls.query.filter(and_(cls.exited != 1, cls.probability_churn > 0.6)).order_by(cls.probability_churn.desc())
         df = pd.read_sql(sql.statement, sql.session.bind)
-        # print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_by_name(cls, member):
         sql = cls.query.filter(cls.name.like(member.name))
         df = pd.read_sql(sql.statement, sql.session.bind)
-        # print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
     
     @classmethod
@@ -616,21 +614,6 @@ class MemberDao(MemberDto):
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
         session.commit()
         session.close()
-
-        # members = pd.read_sql_table('members', engine.connect())
-        # for idx, member in members.iterrows():
-        #     m = dict(member)
-        #     print(type(m))
-        #     member = MemberDto(m['email'], m['password'], m['name'], m['profile'], m['geography'], m['gender'], m['age'], m['tenure'], m['stock_qty'], 
-        #     m['balance'], m['has_credit'], m['credit_score'], m['is_active_member'], m['estimated_salary'], m['role'], m['probability_churn'], m['exited'])
-        #     mcp = MemberChurnPredService()
-        #     mcp.assign(member)
-        #     # mcp.assign(member.to_frame().T)
-        #     prediction = mcp.predict()
-
-        #     prediction = round(prediction[0, 0], 5)
-        #     print(f'PREDICTION: {prediction}')
-        #     member.probability_churn = float(prediction)
         
     
     @staticmethod
@@ -737,10 +720,6 @@ class MemberChurnPredModel(object):
         self.model.fit(self.x_train, self.y_train, epochs=50, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
         self.model.load_weights(checkpoint_path)
-
-        # checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp-{epoch: 04d}.ckpt')
-        # checkpoint_dir = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, verbose=1, save_weights_only=True, save_freq=5)
-        # print(f'CHECKPOINT: {checkpoint_path}')
         
         self.model.save_weights(checkpoint_path.format(epoch=0))
         
@@ -812,9 +791,6 @@ class MemberChurnPredService(object):
     def predict(self):
         new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
         new_model.summary()
-
-        # model_partial = tf.keras.Model(inputs=new_model.input)
-        # model_partial.summary()
 
         data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
          self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup], ]
@@ -926,6 +902,9 @@ class Auth(Resource):
         body = request.get_json()
         print(f'body: {body}')
         member = MemberDto(**body)
+
+        if len(MemberDao.find_by_email(member.email)) > 0:
+            return {'message': 'already exist'}, 500
 
         mcp = MemberChurnPredService()
         mcp.assign(member)

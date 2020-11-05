@@ -89,25 +89,6 @@ class CommentVo:
     comment_level: int = 0
     comment_step: int = 0
 
-# ref, level, step은 대댓글 기능을 위함
-
-# ref: 최초 댓글 - 자신의 id / 대댓글 - 모댓글 ref
-# level: 최초 댓글 - 0 / 대댓글 - 모댓글 level + 1
-# step: 최초 댓글 - 0 / 대댓글 - 모댓글과 ref가 같은 댓글 중 모댓글보다 step이 큰 댓글 모두 step +1 이후 자신은 모댓글 step +1
-
-'''
-순서		    ref	    level	step
-1		        1	    0	    0
-	5	        1	    1	    1
-        7	    1	    2	    2
-	4	        1	    1	    3
-	    6	    1	    2	    4
-2		        2	    0	    0
-3		        3	    0	    0
-
-* 정렬 기준: ref asc 우선 -> step asc
-'''
-
 
 
 

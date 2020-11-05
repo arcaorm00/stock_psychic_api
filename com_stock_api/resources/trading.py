@@ -48,15 +48,6 @@ import datetime
 
 
 class TradingPro:
-    '''
-    이 클래스가 해야할 일
-        1) yahoo_finance와 korea_finance 테이블의 정보 중 date가 2020으로 시작하는 high와 low 사이의 금액을 랜덤으로 구한다. (tradings: price)
-        2) 해당 date는 tradings의 trading_date가 된다. (tradings: trading_date)
-        3) yahoo_finance의 종목을 거래했다면 NASDAQ, korea_finance의 종목을 거래했다면 KOSPI (tradings: stock_type)
-        4) 회원의 balance / price 값의 소수점 버림이 보유주의 수 (tradings: stock_qty)
-        5) 회원의 stock_qty 만큼 새로운 종목을 거래해야 함 (ex. 회원 stock_qty가 2라면 TSLA와 LG화학)
-        !!! yahoo finance와 korea finance의 환율이 다르다! 달러 기준으로 변경해서 계산해야함 !!!
-    '''
 
     def __init__(self):
         self.members = object
@@ -72,28 +63,6 @@ class TradingPro:
         members = pd.read_sql_table('members', engine.connect())
         kospis = pd.read_sql_table('korea_finance', engine.connect())
         nasdaqs = pd.read_sql_table('yahoo_finance', engine.connect())
-
-        '''
-        MEMBERS TABLE:                 email password      name      profile geography  gender  ...  credit_score  is_active_member  estimated_salary       role  probability_churn  exited
-        0  15565701@gmail.com     1234     Ferri  noimage.png     Spain  Female  ...           698                 0           90212.4  ROLE_USER               -1.0       0     
-        1  15565706@gmail.com     1234  Akobundu  noimage.png     Spain    Male  ...           612                 1           83256.3  ROLE_USER               -1.0       1     
-        2  15565714@gmail.com     1234  Cattaneo  noimage.png    France    Male  ...           601                 1           96518.0  ROLE_USER               -1.0       0     
-        3  15565779@gmail.com     1234      Kent  noimage.png   Germany  Female  ...           627                 0          188258.0  ROLE_USER               -1.0       0     
-        4  15565796@gmail.com     1234  Docherty  noimage.png   Germany    Male  ...           745                 0           74510.6  ROLE_USER               -1.0       0     
-        [5 rows x 17 columns]
-        KOSPI TABLE:    id       date    open   close    high     low  volume  ticker
-        0   1 2020-10-16  633000  640000  643000  628000  309530  051910
-        1   2 2020-10-15  636000  637000  648000  629000  531454  051910
-        2   3 2020-10-14  642000  628000  644000  620000  725349  051910
-        3   4 2020-10-13  675000  644000  678000  640000  678451  051910
-        4   5 2020-10-12  680000  672000  692000  670000  551057  051910
-        NASDAQ TABLE:    id ticker       date     open    high      low    close  adjclose     volume
-        0   1   AAPL 2020-01-02  74.0600  75.150  73.7975  75.0875   74.5730  135480400
-        1   2   AAPL 2020-01-03  74.2875  75.145  74.1250  74.3575   73.8480  146322800
-        2   3   AAPL 2020-01-06  73.4475  74.990  73.1875  74.9500   74.4365  118387200
-        3   4   AAPL 2020-01-07  74.9600  75.225  74.3700  74.5975   74.0864  108872000
-        4   5   AAPL 2020-01-08  74.2900  76.110  74.2900  75.7975   75.2782  132079200
-        '''
         
         # kospi의 금액을 모두 20201030 현재 환율 1129.16으로 나눔
         kospis['open'] = [round(float(k)/1129.16, 4) for k in kospis['open']]
@@ -189,8 +158,6 @@ class TradingDto(db.Model):
 
     id: int = db.Column(db.Integer, primary_key=True, index=True)
     email: str = db.Column(db.String(100), db.ForeignKey(MemberDto.email), nullable=False)
-    # kospi_stock_id: int = db.Column(db.Integer, db.ForeignKey(StockDto.id))
-    # nasdaq_stock_id: int = db.Column(db.Integer, db.ForeignKey(YHFinanceDto.id))
     stock_type: str = db.Column(db.String(20), nullable=False)
     stock_ticker: str = db.Column(db.String(50), nullable=False)
     stock_qty: int = db.Column(db.Integer, nullable=False)
@@ -198,8 +165,6 @@ class TradingDto(db.Model):
     trading_date: str = db.Column(db.String(50), default=datetime.datetime.now())
 
     member = db.relationship('MemberDto', back_populates='tradings')
-    # yahoo_finance = db.relationship('YHFinanceDto', back_populates='tradings')
-    # korea_finance = db.relationship('StockDto', back_populates='tradings')
 
     def __init__(self, email, stock_type, stock_ticker, stock_qty, price, trading_date):
         self.email = email
@@ -208,13 +173,6 @@ class TradingDto(db.Model):
         self.stock_qty = stock_qty
         self.price = price
         self.trading_date = trading_date
-    # def __init__(self, email, kospi_stock_id, nasdaq_stock_id, stock_qty, price, trading_date):
-    #     self.email = email
-    #     self.kospi_stock_id = kospi_stock_id
-    #     self.nasdaq_stock_id = nasdaq_stock_id
-    #     self.stock_qty = stock_qty
-    #     self.price = price
-    #     self.trading_date = trading_date
 
     def __repr__(self):
         return 'Trading(trading_id={}, email={}, stock_type={}, stock_ticker={}, stock_qty={}, price={}, trading_date={})'.format(self.id, self.email, self.stock_type, self.stock_ticker, self.stock_qty, self.price, self.trading_date)

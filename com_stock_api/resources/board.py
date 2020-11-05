@@ -71,7 +71,6 @@ class BoardPro:
         data['article_type'] = 'Notice'
         data = data.drop('url', axis=1)
 
-        # print(data['content'][1])
         for idx in range(len(data['content'])):
             con = re.sub('<!--(.+?)-->', '', str(data['content'][idx]))
             con = con.replace('<!--', '')
