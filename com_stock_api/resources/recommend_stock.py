@@ -141,6 +141,7 @@ class RecommendStocksWithSimilarity():
         sim_members = self.sortHundred(similarity)
         match_tradings = self.similarMembersTradings(sim_members, email)
         print(f'match_tradings: \n{match_tradings}')
+        return pd.DataFrame(match_tradings)
 
     @staticmethod
     def similarity(email):
@@ -184,7 +185,9 @@ class RecommendStocksWithSimilarity():
         for mem, prob in sim_members:
             match_tradings = pd.concat([match_tradings, tradings[tradings['email'] == mem]])
         stocks_size = list(match_tradings.groupby('stock_ticker').size().sort_values(ascending=False).index)
-        stocks_list = [s for s in stocks_size if s not in this_members_tradings]
+        stocks_list = [{'stock_ticker':s, 
+        'stock_type': str(match_tradings[match_tradings['stock_ticker'] == s]['stock_type'].unique()[0]),
+        'email': email} for s in stocks_size if s not in this_members_tradings]
         return stocks_list
 
 
@@ -259,11 +262,13 @@ class RecommendStockDao(RecommendStockDto):
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
 
-    @classmethod
-    def find_by_email(cls, email):
-        sql = cls.query.filter(cls.email == email)
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        print(json.loads(df.to_json(orient='records')))
+    @staticmethod
+    def find_by_email(email):
+        # sql = cls.query.filter(cls.email == email)
+        # df = pd.read_sql(sql.statement, sql.session.bind)
+        # print(json.loads(df.to_json(orient='records')))
+        rss = RecommendStocksWithSimilarity()
+        df = rss.hook_process(email)
         return json.loads(df.to_json(orient='records'))
 
 
@@ -356,7 +361,8 @@ class RecommendStocks(Resource):
         rs_dao = RecommendStockDao()
         rs_dao.insert_many('recommend_stocks')
 
-    def get(self):
-        data = RecommendStockDao.find_all()
+    @staticmethod
+    def get():
+        data = RecommendStockDao.find_by_email('15565701@gmail.com')
         return data, 200
 
