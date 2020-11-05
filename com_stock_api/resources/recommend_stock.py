@@ -362,7 +362,7 @@ class RecommendStocks(Resource):
         rs_dao.insert_many('recommend_stocks')
 
     @staticmethod
-    def get():
-        data = RecommendStockDao.find_by_email('15565701@gmail.com')
+    def get(email):
+        data = RecommendStockDao.find_by_email(email)
         return data, 200
 

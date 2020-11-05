@@ -34,8 +34,8 @@ def initialize_routes(api):
     api.add_resource(CommentMaxNum, '/api/commentmaxnum/<string:id>')
     api.add_resource(Tradings, '/api/tradings/<string:email>')
     api.add_resource(Trading, '/api/trading/<string:id>')
-    api.add_resource(RecommendStocks, '/api/recommend-stocks')
-    api.add_resource(RecommendStock, '/api/recommend-stock')
+    api.add_resource(RecommendStocks, '/api/recommend-stocks/<string:email>')
+    api.add_resource(RecommendStock, '/api/recommend-stock/<string:id>')
 
     api.add_resource(NasdaqPredictions, '/nasdaq/predictions')
     api.add_resource(ApplePredGraph, '/nasdaq/apple_pred')

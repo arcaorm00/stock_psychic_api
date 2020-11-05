@@ -183,6 +183,7 @@ class Comment(Resource):
         print(f'body: {body}')
         comment = CommentDto(**body)
         # comment.comment_ref = CommentDao.find_maxnum_for_board(comment.board_id)
+        print(f'COMMENT ID: {comment.id}')
         CommentDao.save(comment)
         content = comment.comment
         return {'comment': str(content)}, 200
