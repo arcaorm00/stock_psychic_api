@@ -10,9 +10,17 @@ from flask import jsonify
 import pandas as pd
 import json
 
-# from com_stock_api.resource.korea_covid import KoreaDto
-# from com_stock_api.resource.korea_finance import StockDto
-# from com_stock_api.resource.korea_news import NewsDto
+from com_stock_api.resources.korea_covid import KoreaDto
+from com_stock_api.resources.korea_finance import StockDto
+from com_stock_api.resources.korea_news import NewsDto
+
+
+
+# ==============================================================
+# =======================                =======================
+# =======================    Modeling    =======================
+# =======================                =======================
+# ==============================================================
 
 
 class KospiDto(db.Model):
@@ -20,13 +28,13 @@ class KospiDto(db.Model):
     __table_args__ = {'mysql_collate':'utf8_general_ci'}
     
     id: str = db.Column(db.Integer, primary_key = True, index = True)
-    date : str = db.Column(db.DATETIME)
+    date : str = db.Column(db.DATE)
     ticker : str = db.Column(db.VARCHAR(30))
     pred_price : int = db.Column(db.VARCHAR(30))
 
-    # covid_id: str = db.Column(db.Integer, db.ForeignKey(KoreaDto.id))
-    # stock_id: str = db.Column(db.Integer, db.ForeignKey(StockDto.id))
-    # news_id: str = db.Column(db.Integer, db.ForeignKey(NewsDto.id))
+    covid_id: str = db.Column(db.Integer, db.ForeignKey(KoreaDto.id))
+    stock_id: str = db.Column(db.Integer, db.ForeignKey(StockDto.id))
+    news_id: str = db.Column(db.Integer, db.ForeignKey(NewsDto.id))
 
 
     def __init__(self,id,date, covid_id,stock_id,news_id,ticker, pred_price):
@@ -58,10 +66,10 @@ class KospiVo:
     id : int = 0
     date : str =''
     ticker: str =''
-    pred_price : int =''
-    covid_id : str =''
-    stock_id : str =''
-    news_id : str ='' 
+    pred_price : int = 0
+    covid_id : str = 0
+    stock_id : str = 0
+    news_id : str =  0
 
 
 Session = openSession()
@@ -72,34 +80,37 @@ class KospiDao(KospiDto):
 
     def __init__(self):
         self.data = os.path.abspath(__file__+"/.."+"/data/")
-    
-    #@staticmethod
+
     def bulk(self):
-        #service = KospiService()
-        #df = service.hook()
         path = self.data
-        df = pd.read_csv(path+'/movie_review.csv',encoding='utf-8', dtype=str)
-        session.bulk_insert_mappings(KospiDto, df.to_dict(orient='records'))
-        session.commit()
+        companys = ['lgchem','lginnotek']
+        for com in companys:
+            print(f'company:{com}')
+            file_name = com +'.csv'
+            input_file = os.path.join(path,file_name)
+            df = pd.read_csv(input_file ,encoding='utf-8',dtype=str)
+            df = df.iloc[84:206, : ]           
+            session.bulk_insert_mappings(KospiDto, df.to_dict(orient='records'))
+            session.commit()
         session.close()
     
     @staticmethod
-    def conut():
+    def count():
         return session.query(func.count(KospiDto.id)).one()
     
     @staticmethod
-    def save(kospi):
-        db.session.add(kospi)
+    def save(data):
+        db.session.add(data)
         db.session.commit()
 
     @staticmethod
-    def update(kospi):
-        db.session.add(kospi)
+    def update(data):
+        db.session.add(data)
         db.session.commit()
 
     @classmethod
-    def delete_kospi(cls,date):
-        data = cls.query.get(date)
+    def delete(cls,id):
+        data = cls.query.get(id)
         db.session.delete(data)
         db.session.commit()
 
@@ -111,113 +122,127 @@ class KospiDao(KospiDto):
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
+    def find_all_by_ticker(cls, stock):
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        df = df[df['ticker'] == stock.ticker]
+        return json.loads(df.to_json(orient='records'))
+
+    @classmethod
     def find_by_id(cls,id):
-        return cls.query.filter_by(id == id).all()
-
-
+        return session.query(KospiDto).filter(KospiDto.id.like(id)).one()
+        
     @classmethod
     def find_by_date(cls, date):
-        return cls.query.filter_by(date == date).first()
+        return session.query(KospiDto).filter(KospiDto.date.like(date)).one()
 
     @classmethod
-    def login(cls,kospi):
-        sql = cls.query.fillter(cls.id.like(kospi.id)).fillter(cls.date.like(kospi.date))
+    def find_by_predprice(cls,pred_price):
+        return session.query(KospiDto).filter(KospiDao.pred_price.like(pred_price)).one()
 
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        print('==================')
-        print(json.loads(df.to_json(orient='records')))
-        return json.loads(df.to_sjon(orient='records'))
+    @classmethod
+    def find_by_stockid(cls,stock_id):
+        return session.query(KospiDto).filter(KospiDto.stock_id.like(stock_id)).one()
 
-if __name__ =="__main__":
-    #KospiDao.bulk()
-    kp = KospiDao()
-    kp.bulk()
+    @classmethod
+    def find_by_ticker(cls,ticker):
+        return session.query(KospiDto).filter(KospiDto.ticker.like(ticker)).one()
 
+    @classmethod
+    def find_by_covidid(cls,covid_id):
+        return session.query(KospiDto).filter(KospiDto.covid_id.like(covid_id)).one()
+
+    @classmethod
+    def fidn_by_newsid(cls,news_id):
+        return session.queryfilter(KospiDto.news_id.like(news_id)).one()
+
+
+# if __name__ =='__main__':
+#     #KospiDao()
+#     r=KospiDao()
+#     r.bulk()
 
 # ==============================================================
+# =====================                  =======================
+# =====================    Resourcing    =======================
+# =====================                  =======================
 # ==============================================================
-# ==============================================================
-# ==============================================================
-# ==============================================================
-
 
 
 parser = reqparse.RequestParser()
-parser.add_argument('id', type=int, required=True, help='This field should be a id')
-parser.add_argument('date', type=str, required=True, help='TThis field should be a date')
-parser.add_argument('covid_id', type=int, required=True, help='This field should be a covid_date')
-parser.add_argument('stock_id', type=int, required=True, help='This field should be a stock_date')
-parser.add_argument('news_id', type=int, required=True, help='This field should be a news_date')
-parser.add_argument('ticker', type=str, required=True, help='This field should be a ticker')
-parser.add_argument('pred_price', type=int, required=True, help='This field should be a price')
+parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('date', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('covid_id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('stock_id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('news_id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('ticker', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('pred_price', type=int, required=True, help='This field cannot be left blank')
 
 class Kospi(Resource):
 
     @staticmethod
     def post():
-        args = parser.parse_args()
-        print(f'Kospi {args["id"]} added')
-        params = json.loads(request.get_data(), encoding='utf-8')
-        if len (params) == 0:
-            return 'No parameter'
-        params_str=''
-        for key in params.keys():
-            params_str += 'key:{},value:{}<br>'.format(key, params[key])
-        return {'code':0, 'message':'SUCCESS'}, 200
-    
-    @staticmethod
-    def post(id):
-        print(f'Kospi{id} added')
+        data = parser.parse_args()
+        kospiprediction = KospiDto(data['date'], data['ticker'],data['pred_price'], data['stock_id'], data['covid_id'], data['news_id'])
         try:
-            kospi = KospiDao.find_by_id(id)
-            if kospi:
-                return kospi.json()
-        except Exception as e:
-            return {'message': 'Item not found'}, 404
-            
-    @staticmethod
-    def update():
-            args = parser.arse_args()
-            print(f'Kospi {args["id"]} updated')
-            return {'code':0, 'message':'SUCCESS'}, 200
-            
-    @staticmethod
-    def delete():
-        args = parser.parse_args()
-        print(f'Kospi {args["id"]} deleted')
-        return {'code':0, 'message':'SUCCESS'}, 200
+            kospiprediction.save(data)
+            return {'code':0, 'message':'SUCCESS'},200
+        except:
+            return {'message': 'An error occured inserting the pred history'}, 500
+        return kospiprediction.json(),201
+
+    def get(self, id):
+        kospiprediction = KospiDao.find_by_id(id)
+        if kospiprediction:
+            return kospiprediction.json()
+        return {'message': 'kospiprediction not found'}, 404
+    
+    def put(self, id):
+        data = Kospi.parser.parse_args()
+        prediction = KospiDao.find_by_id(id)
+
+        prediction.date = data['date']
+        prediction.price = data['pred_price']
+        prediction.save()
+        return prediction.json()
 
 class Kospis(Resource):
+    def get(self):
+        return  KospiDao.find_all(), 200
 
+class lgchem_pred(Resource):
     @staticmethod
     def get():
-        kd = KospiDao()
-        kd.insert_many('kospi_pred')
-
-    def get():
-        data = KospiDao.find_all()
+        stock = KospiVo()
+        stock.ticker='051910'
+        data = KospiDao.find_all_by_ticker(stock)
         return data, 200
 
-class Auth(Resource):
-
-    @staticmethod
-    def post():
-        body = request.get_json()
-        kospi = KospiDto(**body)
-        KospiDao.save(kospi)
-        id = kospi.id
-
-        return {'id': str(id)}, 200
-
-class Access(Resource):
-    
     @staticmethod
     def post():
         args = parser.parse_args()
-        kospi = KospiVo()
-        kospi.id = args.id
-        kospi.date = args.date
-        print(kospi.id)
-        print(kospi.date)
-        data = KospiDao.login(kospi)
+        stock = KospiVo()
+        stock.ticker = args.ticker
+        data = KospiDao.find_all_by_ticker(stock)
         return data[0], 200
+
+class lginnotek_pred(Resource):
+
+    @staticmethod
+    def get():
+        stock = KospiVo()
+        stock.ticker='011070'
+        data = KospiDao.find_all_by_ticker(stock)
+        return data, 200
+
+    @staticmethod
+    def post():
+        args = parser.parse_args()
+        stock = KospiVo()
+        stock.ticker = args.ticker
+        data = KospiDao.find_all_by_ticker(stock)
+        return data[0], 200
+
+
+
+        

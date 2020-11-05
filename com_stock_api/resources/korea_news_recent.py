@@ -15,6 +15,15 @@ from sqlalchemy import func
 from pathlib import Path
 from flask import jsonify
 import json
+from sqlalchemy.dialects.mysql import DATE
+import time
+import random
+
+# ==============================================================
+# =========================                =====================
+# =========================  Data Mining   =====================
+# =========================                =====================
+# ==============================================================
 
 
 class KoreaNews():
@@ -23,7 +32,6 @@ class KoreaNews():
         self.stock_code = None
 
     def new_model(self):
-        print(f'ENTER STEP 1 : new_model ')
         stock_code = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13',
                        header=0)[0]
         stock_code.종목코드=stock_code.종목코드.map('{:06d}'.format)
@@ -34,14 +42,10 @@ class KoreaNews():
         self.stock_code = stock_code
 
     def search_news(self,company):
-        print(f'ENTER STEP 2 : search_news ')
-        print(f'company : {company}')
-
         article_result =[]
         title_result = []
         link_result = []
         date_result = []
-        #source_result = []
 
         stock_code = self.stock_code
         plusUrl = company.upper()
@@ -73,12 +77,6 @@ class KoreaNews():
                     #docs = htmls.find("table",{"class":"view"})
                     docs = htmls.find("div",{"class":"scr01"})
                     docs = docs.text.replace('/','').replace('?','').replace("\t",'').replace("\n",'').replace('/n','').replace('[','').replace(']','').replace('!','').replace('-','').replace('$','').replace('▲','').replace("'",'').replace('■','').replace('◆','').replace('#','').replace('_','').replace('=','').replace('"','').replace(" \'",'').replace('아웃링크','').replace('◀','').replace('▶','').replace('<','').replace('>','').replace(':','').replace(',','').replace('ⓒ','').replace('※','').replace('\xa0','').replace('&','').replace('△','').replace('이데일리','').replace('매일경제','').replace('파이낸셜뉴스','').replace('서울경제','').replace('한국경제','').replace('조선비즈','').replace('아시아경제','').replace('머니투데이','').replace('헤럴드경제','').replace('···','').replace('·','').replace('‘','').replace('’','').replace('..','').replace("“",'').replace("”",'').replace('`','').replace('…','').replace('Copyrights','').replace('━','').replace('@','').lstrip()
-            
-                    #docs = docs.get_text()
-                
-
-                    #print(type(docs))
-                    #print(docs)
                     article_result.append(docs)
                 #print(article_result)
 
@@ -89,23 +87,18 @@ class KoreaNews():
                 #print(link_result)
 
                 dates = items.select('.date') 
-                #date_result = [date.get_text() for date in dates] 
                 for date in dates:
                     date = date.get_text()
                     date_result.append(date)
                 #print(date_result)
 
-                # sources = items.select('.info')
-                # #source_result = [source.get_text() for source in sources]
-                # for source in sources:
-                #     source = source.get_text()
-                #     source_result.append(source)
-                # #print(source_result)
-
 
             result= {"date" : date_result, "headline" : title_result, "content" : article_result, "url" : link_result,"ticker":plusUrl.zfill(6)} 
-            # press" : source_result
             df_result = pd.DataFrame(result)
+            time.sleep( random.uniform(2,4) )
+
+
+
             #df_result['date']=pd.to_datetime(df_result['date'].astype(str), format='%Y/%m/%d')
             #df_result.set_index('date', inplace=True)
             #print(df_result['date'])
@@ -113,6 +106,12 @@ class KoreaNews():
                         
 
 
+
+# ==============================================================
+# =======================                =======================
+# =======================    Modeling    =======================
+# =======================                =======================
+# ==============================================================
 
 
 class NewsDto(db.Model):
@@ -122,7 +121,7 @@ class NewsDto(db.Model):
     id: str = db.Column(db.Integer, primary_key = True, index = True)
     date : str = db.Column(db.DATETIME)
     headline : str = db.Column(db.String(255))
-    content : str = db.Column(db.Text) #String(10000)
+    content : str = db.Column(db.Text)
     url :str = db.Column(db.String(500))
     ticker : str = db.Column(db.String(30))
     
@@ -166,21 +165,28 @@ session= Session()
 
 
 
-class RecentKospiNewsDao(NewsDto):
+class RNewsDao(NewsDto):
     
-    # def __init__(self):
-    #     self.data = os.path.abspath(__file__+"/.."+"/data/")
+    def __init__(self):
+        self.data = os.path.abspath(__file__+"/.."+"/data/")
     
-    @staticmethod
-    def bulk(): #self
-        kn = KoreaNews()
-        kn.new_model()
+
+    def bulk(self):
+        path = self.data
+        # kn = KoreaNews()
+        # kn.new_model()
         companys = ['lg화학','lg이노텍']
         for com in companys:
-            df = kn.search_news(com)
-            #df = service.hook()
-            # path = self.data
-            # df=pd.read_csv( path +'/011070.csv',encoding='utf-8',dtype=str)
+            print(f'company:{com}')
+            # df = kn.search_news(com)
+            if com =='lg화학':
+                com ='lgchem'
+            elif com =='lg이노텍':
+                com='lginnotek'
+            file_name = com +'.csv'
+            input_file = os.path.join(path,file_name)
+            # df.to_csv(path + '/'+com+'_recent_news.csv',encoding='UTF-8')
+            df = pd.read_csv(input_file ,encoding='utf-8',dtype=str)
             print(df.head()) 
             session.bulk_insert_mappings(NewsDto, df.to_dict(orient='records'))
             session.commit()
@@ -191,18 +197,18 @@ class RecentKospiNewsDao(NewsDto):
         return session.query(func.count(NewsDto.id)).one()
 
     @staticmethod
-    def save(news):
-        db.session.add(news)
+    def save(data):
+        db.session.add(data)
         db.session.commit()
     
     @staticmethod
-    def update(news):
-        db.session.add(news)
+    def update(data):
+        db.session.add(data)
         db.session.commit()
     
     @classmethod
-    def delete(cls,headline):
-        data = cls.qeury.get(headline)
+    def delete(cls,id):
+        data = cls.qeury.get(id)
         db.session.delete(data)
         db.session.commit()
     
@@ -211,17 +217,40 @@ class RecentKospiNewsDao(NewsDto):
         sql =cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
+
+    @classmethod
+    def find_all_by_ticker(cls, rnews):
+        sql = cls.query
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        df = df[df['ticker']== rnews.ticker]
+        return json.loads(df.to_json(orient='records'))
     
 
     @classmethod
     def find_by_id(cls,id):
-        return cls.query.filter_by(id == id).all()
+        return session.query(NewsDto).filter(NewsDto.id.like(id)).one()
 
+    @classmethod
+    def find_by_date(cls,date):
+        return session.query(NewsDto).filter(NewsDto.date.like(date)).one()
 
     @classmethod
     def find_by_headline(cls, headline):
-        return cls.query.filter_by(headline == headline).first()
+        return session.query(NewsDto).filter(NewsDto.headline.like(headline)).one()
 
+
+    @classmethod
+    def find_by_content(cls,content):
+        return session.query(NewsDto).filter(NewsDto.contet.like(content)).one()
+
+    @classmethod
+    def find_by_url(cls,url):
+        return session.query(NewsDto).filter(NewsDto.url.like(url)).one()
+
+    @classmethod
+    def find_by_ticker(cls,ticker):
+        return session.query(NewsDto).filter(NewsDto.ticker.like(ticker)).all()
+    
     @classmethod
     def login(cls,news):
         sql = cls.query.fillter(cls.id.like(news.id)).fillter(cls.headline.like(news.headline))
@@ -232,97 +261,110 @@ class RecentKospiNewsDao(NewsDto):
         return json.loads(df.to_json(orient='records'))
 
 
-
-if __name__ == "__main__":
-    RecentKospiNewsDao.bulk()
-    #n = RecentNewsDao()
-    #n.bulk()
-
-
 # ==============================================================
-# ==============================================================
-# ==============================================================
-# ==============================================================
+# =====================                  =======================
+# =====================    Resourcing    =======================
+# =====================                  =======================
 # ==============================================================
 
 
 parser = reqparse.RequestParser()
-parser.add_argument('id', type=int, required=True, help='This field should be a id')
-parser.add_argument('date', type=str, required=True, help='This field should be a date')
-parser.add_argument('headline', type=str, required=True, help='This field should be a headline')
-parser.add_argument('content', type=str, required=True, help='This field should be a content')
-parser.add_argument('url', type=str, required=True, help='This field should be a url')
-parser.add_argument('ticker', type=str, required=True, help='This field should be a stock')
+parser.add_argument('id', type=int, required=True, help='This field cannot be left blank')
+parser.add_argument('date', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('headline', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('content', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('url', type=str, required=True, help='This field cannot be left blank')
+parser.add_argument('ticker', type=str, required=True, help='This field cannot be left blank')
 
 
 
-class News(Resource):
+class RNews(Resource):
 
     @staticmethod
-    def post():
-        args = parser.parse_args()
-        print(f'News {args["id"]} added')
-        parmas = json.loads(request.get_data(), encoding='utf-8')
-        if len (parmas) == 0:
-            return 'No parameter'
-        
-        params_str=''
-        for key in parmas.keys():
-            params_str += 'key:{}, value:{}<br>'.format(key, parmas[key])
-        return {'code':0, 'message': 'SUCCESS'}, 200
-    
-    @staticmethod
-    def get(id):
-        print(f'News {id} added')
+    def post(self):
+        data = self.parser.parse_args()
+        rnews = NewsDto(data['date'],data['headline'],data['content'],data['url'],data['ticker'])
         try:
-            news = RecentKospiNewsDao.find_by_id(id)
-            if news:
-                return news.json()
-        except Exception as e:
-            return {'message': 'Item not found'}, 404
-    @staticmethod
-    def update():
-        args = parser.arse_args()
-        print(f'News {args["id"]} updated')
-        return {'code':0, 'message':'SUCCESS'}, 200
+            rnews.save(data)
+            return {'code':0, 'message':'SUCCESS'},200
+        except:
+            return {'message': 'An error occured inserting recent news'}, 500
+        return rnews.json(), 201
     
-    @staticmethod
-    def delete():
-        args = parser.parse_args()
-        print(f'News {args["id"]} deleted')
-        return {'code':0, 'message':'SUCCESS'}, 200
 
-class News_(Resource):
+    def get(self, ticker):
+        rnews = RNewsDao.find_by_ticker(ticker)
+        if rnews:
+            return rnews.json()
+        return {'message': 'The recent news was not found'}, 404
+
+
+    def put(self, id):
+        data = RNews.parser.parse_args()
+        rnews = RNewsDao.find_by_id(id)
+
+        rnews.date = data['date']
+        rnews.ticker = data['ticker']
+        rnews.url = data['url']
+        rnews.headline = data['headline']
+        rnews.content = data['content']
+        rnews.save()
+        return rnews.json()
+
+
+class RNews_(Resource):
+    def get(self):
+        return {'recent news history': list(map(lambda article: article.json(), RNewsDao.find_all()))}
+    
+    # @staticmethod
+    # def post():
+    #     rn = RNewsDao()
+    #     rn.insert('korea_recent_news')
+    
+    # @staticmethod
+    # def get():
+    #     data = RNewsDao.find_all()
+    #     return data, 200
+
+
+class lgchemNews(Resource):
     
     @staticmethod
     def get():
-        rn = RecentKospiNewsDao()
-        rn.insert('naver_news')
-    
-    @staticmethod
-    def get():
-        data = RecentKospiNewsDao.find_all()
+        print("lgchem_recent_news get")
+        rnews= NewsVo()
+        rnews.ticker ='051910'
+        data = RNewsDao.find_all_by_ticker(rnews)
         return data, 200
 
-class Auth(Resource):
     @staticmethod
     def post():
-        body = request.get_json()
-        news = NewsDto(**body)
-        RecentKospiNewsDao.save(news)
-        id = news.id
+        print('lgchem_recent_news post')
+        args = parser.parse_args()
+        rnews = NewsVo()
+        rnews.ticker = args.ticker
+        data = RNewsDao.find_all_by_ticker(rnews)
+        return data[0],200
 
-        return {'id': str(id)}, 200
 
-class Access(Resource):
+class lginnoteknews(Resource):
     
     @staticmethod
+    def get():
+        print("lginnotek_recent_news get")
+        rnews= NewsVo()
+        rnews.ticker = '011070'
+        data = RNewsDao.find_all_by_ticker(rnews)
+        return data, 200
+
+    @staticmethod
     def post():
+        print("lginnotek_recent_news post")
         args = parser.parse_args()
-        news = NewsVo()
-        news.id = args.id
-        news.headline = args.headline
-        print(news.id)
-        print(news.headline)
-        data = RecentKospiNewsDao.login(news)
+        rnews = NewsVo()
+        rnews.ticker = args.ticker
+        data = RNewsDao.find_all_by_ticker(rnews)
         return data[0], 200
+
+
+
