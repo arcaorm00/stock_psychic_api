@@ -10,6 +10,13 @@ from flask import jsonify
 import pandas as pd
 import json
 
+
+# ==============================================================
+# =======================                =======================
+# =======================    Modeling    =======================
+# =======================                =======================
+# ==============================================================
+
 class Covidedit():
     def __init__(self):
         self.data = os.path.abspath(__file__+"/.."+"/data/")
@@ -99,10 +106,8 @@ class KoreaDao(KoreaDto):
     def __init__(self):
         self.data = os.path.abspath(__file__+"/.."+"/data/")
 
-    #@staticmethod
+
     def bulk(self):
-        #service = CovidService()
-        #df = service.hool()
         path = self.data
         df = pd.read_csv(path +'/kor&seoul.csv', encoding='utf-8')
         print(df.head())
@@ -131,7 +136,7 @@ class KoreaDao(KoreaDto):
         db.sessio.commit()
 
     @classmethod
-    def fond_all(cls):
+    def find_all(cls):
         sql = cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
@@ -139,42 +144,43 @@ class KoreaDao(KoreaDto):
 
     @classmethod
     def find_by_id(cls,id):
-        return cls.query.filter_by(id == id).all()
+        return session.query(KoreaDto).filter(KoreaDto.id.like(id)).one()
+    @classmethod
+    def find_by_seoulcases(cls,seoul_cases):
+        return session.qeury(KoreaDto).filter(KoreaDto.seoul_cases.like(seoul_cases)).one()
 
+    @classmethod
+    def find_by_seouldeath(cls,seoul_death):
+        return session.query(KoreaDto).filter(KoreaDto.seoul_death.like(seoul_death)).one()
 
+    @classmethod
+    def find_by_totalcases(cls,total_cases):
+        return session.query(KoreaDto).filter(KoreaDto.total_cases.like(total_cases)).one()
+    
+    @classmethod
+    def find_by_totaldeath(cls,total_death):
+        return session.query(KoreaDto).filter(KoreaDto.total_death.like(total_death)).one()
+    
     @classmethod
     def find_by_date(cls, date):
-        return cls.query.filter_by(date == date).first()
+        return session.query.filter(KoreaDto.date.like(date)).one()
 
-    @classmethod
-    def login(cls,covid):
-        sql = cls.query.fillter(cls.id.like(covid.id)).fillter(cls.date.like(covid.date))
-
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        print('======================')
-        print(json.loads(df.to_json(orient='records')))
-        return json.loads(df.to_json(orient='records'))
-
-if __name__ == '__main__':
-    #KoreaDao.bulk()
-    k = KoreaDao()
-    k.bulk()    
 
 
 # ==============================================================
-# ==============================================================
-# ==============================================================
-# ==============================================================
+# =====================                  =======================
+# =====================    Resourcing    =======================
+# =====================                  =======================
 # ==============================================================
 
 
 parser = reqparse.RequestParser()
-parser.add_argument('id',type=int, required=True,help='This field should be a id')
-parser.add_argument('date',type=str, required=True,help='This field should be a date')
-parser.add_argument('seoul_cases',type=int, required=True,help='This field should be a seoul_cases')
-parser.add_argument('seoul_death',type=int, required=True,help='This field should be a seoul_deate')
-parser.add_argument('total_cases',type=int, required=True,help='This field should be a total_cases')
-parser.add_argument('total_death',type=int, required=True,help='This field should be a password')
+parser.add_argument('id',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('date',type=str, required=True,help='This field cannot be left blank')
+parser.add_argument('seoul_cases',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('seoul_death',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('total_cases',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('total_death',type=int, required=True,help='This field cannot be left blank')
 
 
 class KoreaCovid(Resource):
@@ -193,7 +199,7 @@ class KoreaCovid(Resource):
         
     
     @staticmethod
-    def post(id):
+    def get(id: int):
         print(f'Covid {id} added')
         try:
             covid = KoreaDao.find_by_id(id)
@@ -217,7 +223,7 @@ class KoreaCovid(Resource):
 class KoreaCovids(Resource):
 
     @staticmethod
-    def get():
+    def post():
         kd = KoreaDao()
         kd.insert_many('korea_covid')
     
@@ -227,26 +233,4 @@ class KoreaCovids(Resource):
         data = KoreaDao.find_all()
         return data, 200
 
-class Auth(Resource):
 
-    @staticmethod
-    def post():
-        body = request.get_json()
-        covid = KoreaDto(**body)
-        KoreaDao.save(covid)
-        id = covid.id
-
-        return {'id': str(id)}, 200
-
-class Access(Resource):
-
-    @staticmethod
-    def post():
-        args = parser.parse_args()
-        covid = KoreaVo()
-        covid.id = args.id
-        covid.date = args.date
-        print(covid.id)
-        print(covid.date)
-        data = KoreaDao.login(covid)
-        return data[0], 200

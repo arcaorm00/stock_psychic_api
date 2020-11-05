@@ -18,9 +18,8 @@ from com_stock_api.resources.recent_news import RecentNasdaqNewsDao
 from com_stock_api.resources.korea_news import NewsDao
 from com_stock_api.resources.korea_covid import KoreaDao
 from com_stock_api.resources.korea_finance import StockDao
-from com_stock_api.resources.korea_finance_recent import RecentStockDao
-from com_stock_api.resources.korea_news_recent import RecentKospiNewsDao
-from com_stock_api.resources.kospi_pred import KospiDao
+from com_stock_api.resources.korea_news_recent import RNewsDao
+# from com_stock_api.resources.kospi_pred import KospiDao
 
 from flask_cors import CORS
 
@@ -97,26 +96,28 @@ with app.app_context():
         k = KoreaDao()
         k.bulk()
 
-    stock_count = StockDao.count()
-    print(f'**** Stock Count is {stock_count} **********')
-    if stock_count[0] == 0:
-        #StockDao().bulk()
-        s = StockDao()
-        s.bulk()
-
-    recent_stock_count = RecentStockDao.count()
-    print(f'**** Recent Stock Count is {recent_stock_count} ****')
+    recent_stock_count = StockDao.count()
+    print(f'****Stock Count is {recent_stock_count} ****')
     if recent_stock_count[0] == 0:
-        RecentStockDao.bulk()
-        #rs = RecentStockDao()
-        #rs.bulk()
+        #StockDao.bulk()
+        rs = StockDao()
+        rs.bulk()
     
-    recent_news_count = RecentKospiNewsDao.count()
+    recent_news_count = RNewsDao.count()
     print(f'******* Recent News Count is {recent_news_count}*****')
     if recent_news_count[0] == 0:
-        RecentKospiNewsDao.bulk()
-        #rn = RecentNewsDao()
-        #rn.bulk()
+        #RNewsDao.bulk()
+        rn = RNewsDao()
+        rn.bulk()
+
+    # pred_count = KospiDao.count()
+    # print(f'***** Pred Count is {pred_count} *********')
+    # if pred_count[0] == 0:
+    #     #KospiDao.bulk()
+    #     kp = KospiDao()
+    #     kp.bulk()
+
+    
 
 with app.app_context():
     count = TradingDao.count()
