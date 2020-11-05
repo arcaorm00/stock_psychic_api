@@ -13,7 +13,7 @@ from com_stock_api.resources.nasdaq_prediction import NasdaqPredictionDao
 from com_stock_api.resources.uscovid import USCovidDao
 from com_stock_api.resources.yhfinance import YHFinanceDao
 from com_stock_api.resources.investingnews import InvestingDao
-from com_stock_api.resources.recent_news import RecentNasdaqNewsDao
+from com_stock_api.resources.recent_news import RecentNewsDao
 
 from com_stock_api.resources.korea_news import NewsDao
 from com_stock_api.resources.korea_covid import KoreaDao
@@ -69,10 +69,10 @@ with app.app_context():
     if count3[0] == 0:
         InvestingDao.bulk()
 
-    count4 = RecentNasdaqNewsDao.count()
+    count4 = RecentNewsDao.count()
     print(f'Recent news Total Count is {count4[0]}')
     if count4[0] == 0:
-        RecentNasdaqNewsDao.bulk()
+        RecentNewsDao.bulk()
 
     count5 = NasdaqPredictionDao.count()
     print(f'Nasdap Prediction Total Count is {count5}')
@@ -117,7 +117,7 @@ with app.app_context():
     #     kp = KospiDao()
     #     kp.bulk()
 
-    
+
 
 with app.app_context():
     count = TradingDao.count()
