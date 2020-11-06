@@ -139,11 +139,83 @@ class RecommendStockPreprocessing():
 class RecommendStockModel():
 
     def __init__(self):
-        self._this_mem = tf.placeholder(tf.float32, name='thismember')
-        # 텐서 변수로 이 멤버와 계산할 비교 멤버 두고 계산해보기!
+        self._this_mem = tf.placeholder(tf.float32, name='this_member')
+        self._target_mem = tf.placeholder(tf.float32, name='target_member')
+        self._feed_dict = {}
+    
+    def hook(self):
+        self.substitute()
+        
 
+        
 
+    def substitute(self):
+        members = pd.read_sql_table('members', engine.connect())
+        preprocessing = RecommendStockPreprocessing()
+        refined_members = preprocessing.hook_process(members)
+        
+        isExitedMem = refined_members[refined_members['exited']==1].index
+        refined_members = refined_members.drop(isExitedMem)
+        print(f'REFINED MEMBERS: \n{refined_members}')
 
+        refined_members.set_index(refined_members['email'], inplace=True)
+        refined_members = refined_members.drop(['email'], axis=1)
+        print(f'REFINED MEMBERS AFTER EMAIL INDEXING: \n{refined_members}')
+
+        base_columns = refined_members.columns
+
+        for email in refined_members.index:
+            # print(refined_members['estimated_salary'][email])
+            base_columns = refined_members.columns
+
+            this_member = pd.DataFrame(refined_members.loc[email, base_columns]).T
+            else_members = refined_members.loc[:, base_columns].drop(email, axis=0)
+
+            for mem in else_members.index:
+
+                # self._this_mem = this_member.loc[email, base_columns]
+                # self._target_mem = else_members.loc[mem, base_columns]
+                self._feed_dict = {'this_member': this_member.loc[email, base_columns], 'target_member': else_members.loc[mem, base_columns]}
+                self.create_recommend_model()
+                # print(self._this_mem)
+                # print(self._target_mem)
+
+                if mem == '15565806@gmail.com': break
+            
+            if mem == '15565806@gmail.com': break
+        
+
+    
+    def create_recommend_model(self):
+        this = self._this_mem
+        target = self._target_mem
+        feed_dict = self._feed_dict
+
+        main_m = np.linalg.norm(feed_dict['this_member'])
+        row_mem = np.linalg.norm(feed_dict['target_member'])
+        print(f'main_m: {main_m}')
+        print(f'row_mem: {row_mem}')
+
+        expr = tf.tensordot(this, target, 1, name='member_dot')
+        expr_div = tf.divide(this, target, name='member_div')
+
+        with tf.Session() as sess:
+            _ = tf.Variable(initial_value='fake_variable')
+            sess.run(tf.global_variables_initializer())
+            prod = sess.run(expr, {this: feed_dict['this_member'], target: feed_dict['target_member']})
+            print(f'PROD: {prod}')
+            result = sess.run(expr_div, {this: prod, target: (main_m*row_mem)})
+            print(f'RESULT: {result}')
+            # saver = tf.train.Saver()
+            # saver.save(sess, './models/...', global_step=1000)
+
+        
+        # prod = np.dot(this_member.loc[email, base_columns], else_members.loc[mem, base_columns])
+        # print(prod)
+
+        # sim_dict[mem] = prod/(main_n*row_mem)
+        
+        
 
 class RecommendStocksWithSimilarity():
 
@@ -220,8 +292,11 @@ class RecommendStocksWithSimilarity():
 
 
 if __name__ == '__main__':
-    rs = RecommendStocksWithSimilarity()
-    rs.hook_process(email='15660679@gmail.com')
+    model = RecommendStockModel()
+    model.hook()
+# if __name__ == '__main__':
+#     rs = RecommendStocksWithSimilarity()
+#     rs.hook_process(email='15660679@gmail.com')
     
 
 
