@@ -185,6 +185,12 @@ class BoardDao(BoardDto):
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
+    @classmethod
+    def find_by_title(cls, title):
+        sql = cls.query.filter(cls.email.like(f'%{title}%'))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        return json.loads(df.to_json(orient='records'))
+
     @staticmethod
     def save(board):
         db.session.add(board)
@@ -305,3 +311,16 @@ class Boards(Resource):
     def get(self):
         data = BoardDao.find_all()
         return data, 200
+
+class BoardTitleSearch(Resource):
+    
+    @staticmethod
+    def get(title):
+        try:
+            board = BoardDao.find_by_title(title)
+            print(f'board: {board}')
+            if board:
+                return board, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Aricle not found'}, 404

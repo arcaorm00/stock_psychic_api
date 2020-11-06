@@ -555,20 +555,27 @@ class MemberDao(MemberDto):
 
     @classmethod
     def find_by_email(cls, email):
+        sql = cls.query.filter(cls.email.like(f'%{email}%'))
+        df = pd.read_sql(sql.statement, sql.session.bind)
+        # print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
+
+    @classmethod
+    def find_by_email_exactly(cls, email):
         sql = cls.query.filter(cls.email.like(email))
         df = pd.read_sql(sql.statement, sql.session.bind)
-        print(json.loads(df.to_json(orient='records')))
+        # print(json.loads(df.to_json(orient='records')))
+        return json.loads(df.to_json(orient='records'))
+
+    @classmethod
+    def find_by_name(cls, name):
+        sql = cls.query.filter(cls.name.like(f'%{name}%'))
+        df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
     def find_high_proba_churn(cls):
         sql = cls.query.filter(and_(cls.exited != 1, cls.probability_churn > 0.6)).order_by(cls.probability_churn.desc())
-        df = pd.read_sql(sql.statement, sql.session.bind)
-        return json.loads(df.to_json(orient='records'))
-
-    @classmethod
-    def find_by_name(cls, member):
-        sql = cls.query.filter(cls.name.like(member.name))
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
     
@@ -864,7 +871,6 @@ class Member(Resource):
     def get(email: str):
         try:
             member = MemberDao.find_by_email(email)
-            print(f'member: {member}')
             if member:
                 return member
         except Exception as e:
@@ -909,7 +915,7 @@ class Auth(Resource):
         print(f'body: {body}')
         member = MemberDto(**body)
 
-        if len(MemberDao.find_by_email(member.email)) > 0:
+        if len(MemberDao.find_by_email_exactly(member.email)) > 0:
             return {'message': 'already exist'}, 500
 
         mcp = MemberChurnPredService()
@@ -946,5 +952,23 @@ class Access(Resource):
 class HighChurnMembers(Resource):
 
     def get(self):
-        members = MemberDao.find_high_proba_churn()
-        return members, 200
+        try:
+            members = MemberDao.find_high_proba_churn()
+            if members:
+                return members, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Members not found'}, 404
+
+class MemberNameSearch(Resource):
+
+    @staticmethod
+    def get(name):
+        try:
+            member = MemberDao.find_by_name(name)
+            print(f'member: {member}')
+            if member:
+                return member, 200
+        except Exception as e:
+            print(e)
+            return {'message': 'Member not found'}, 404
