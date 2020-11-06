@@ -136,6 +136,15 @@ class RecommendStockPreprocessing():
 # import pickle
 
 
+class RecommendStockModel():
+
+    def __init__(self):
+        self._this_mem = tf.placeholder(tf.float32, name='thismember')
+        # 텐서 변수로 이 멤버와 계산할 비교 멤버 두고 계산해보기!
+
+
+
+
 class RecommendStocksWithSimilarity():
 
     def hook_process(self, email):
