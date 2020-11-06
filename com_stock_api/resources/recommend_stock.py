@@ -12,6 +12,7 @@ import numpy as np
 import math
 import operator
 
+import os
 
 
 '''
@@ -142,6 +143,7 @@ class RecommendStocksWithSimilarity():
         sim_members = self.sortFifty(similarity)
         match_tradings = self.similarMembersTradings(sim_members, email)
         print(f'match_tradings: \n{match_tradings}')
+        self.save_pickle(pd.DataFrame(match_tradings))
         return pd.DataFrame(match_tradings)
 
     @staticmethod
@@ -190,14 +192,15 @@ class RecommendStocksWithSimilarity():
         'stock_type': str(match_tradings[match_tradings['stock_ticker'] == s]['stock_type'].unique()[0]),
         'email': email} for s in stocks_size if s not in this_members_tradings]
         return stocks_list
+    
+    # 여기에 전체 멤버의 추천 종목 dataframe을 만들고 hook에서 호출해야함
 
     @staticmethod
-    def save_pickle(stocks_list):
-        stocks_df = pd.DataFrame(stocks_list)
+    def save_pickle(stocks_df):
         print(f'stocks_df: \n{stocks_df}')
-        stocks_df.to_pickle('recommend_stock.pkl')
-
-
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'saved_data')
+        file = os.path.join(path, 'recommend_stocks.pkl')
+        stocks_df.to_pickle(file)
 
 
 if __name__ == '__main__':
