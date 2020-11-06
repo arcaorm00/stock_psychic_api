@@ -130,6 +130,7 @@ class RecommendStockPreprocessing():
 
 
 
+import pickle
 
 
 class RecommendStocksWithSimilarity():
@@ -138,7 +139,7 @@ class RecommendStocksWithSimilarity():
         print('START')
         similarity = self.similarity(email)
         print(f'get similarity complete')
-        sim_members = self.sortHundred(similarity)
+        sim_members = self.sortFifty(similarity)
         match_tradings = self.similarMembersTradings(sim_members, email)
         print(f'match_tradings: \n{match_tradings}')
         return pd.DataFrame(match_tradings)
@@ -172,7 +173,7 @@ class RecommendStocksWithSimilarity():
         return sim_dict
 
     @staticmethod
-    def sortHundred(sim_dict):
+    def sortFifty(sim_dict):
         sim_members = sorted(sim_dict.items(), key=operator.itemgetter(1), reverse=True)[:50]
         return sim_members
 
@@ -189,6 +190,14 @@ class RecommendStocksWithSimilarity():
         'stock_type': str(match_tradings[match_tradings['stock_ticker'] == s]['stock_type'].unique()[0]),
         'email': email} for s in stocks_size if s not in this_members_tradings]
         return stocks_list
+
+    @staticmethod
+    def save_pickle(stocks_list):
+        stocks_df = pd.DataFrame(stocks_list)
+        print(f'stocks_df: \n{stocks_df}')
+        stocks_df.to_pickle('recommend_stock.pkl')
+
+
 
 
 if __name__ == '__main__':
