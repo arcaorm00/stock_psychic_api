@@ -13,6 +13,8 @@ import math
 import operator
 
 import os
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 
 '''
@@ -131,7 +133,7 @@ class RecommendStockPreprocessing():
 
 
 
-import pickle
+# import pickle
 
 
 class RecommendStocksWithSimilarity():
@@ -195,33 +197,16 @@ class RecommendStocksWithSimilarity():
     
     # 여기에 전체 멤버의 추천 종목 dataframe을 만들고 hook에서 호출해야함
     # 필요한 피처: email, name, profile, geography, gender, age, tenure, stock_qty, balance, has_credit, credit_score, is_active_member, estimated_salary, probability_churn, stock_type, stock_ticker(LABEL)
+    # 이렇게 하려고 했는데 예시를 추천해주셔서 적용해보기로
 
-    email: str = db.Column(db.String(100), primary_key=True, index=True)
-    password: str = db.Column(db.String(50), nullable=False)
-    name: str = db.Column(db.String(50), nullable=False)
-    profile: str = db.Column(db.String(200), default='noimage.png')
-    geography: str = db.Column(db.String(50))
-    gender: str = db.Column(db.String(10))
-    age: int = db.Column(db.Integer)
-    tenure: int = db.Column(db.Integer, default=0)
-    stock_qty: int = db.Column(db.Integer, default=0)
-    balance: float = db.Column(db.FLOAT, default=0.0)
-    has_credit: int = db.Column(db.Integer)
-    credit_score: int = db.Column(db.Integer)
-    is_active_member: int = db.Column(db.Integer, nullable=False, default=1)
-    estimated_salary: float = db.Column(db.FLOAT)
-    role: str = db.Column(db.String(30), nullable=False, default='ROLE_USER')
-    probability_churn: float = db.Column(db.FLOAT, default=-1)
-    exited: int = db.Column(db.Integer, nullable=False, default=0)
-
-    @staticmethod
-    def save_pickle(stocks_df):
-        print(f'stocks_df: \n{stocks_df}')
-        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'saved_data')
-        file = os.path.join(path, 'recommend_stocks.pkl')
-        stocks_df.to_pickle(file)
-        read_pkl = pd.read_pickle(file)
-        print(f'read_pickle: \n{read_pkl}')
+    # @staticmethod
+    # def save_pickle(stocks_df):
+    #     print(f'stocks_df: \n{stocks_df}')
+    #     path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'saved_data')
+    #     file = os.path.join(path, 'recommend_stocks.pkl')
+    #     stocks_df.to_pickle(file)
+    #     read_pkl = pd.read_pickle(file)
+    #     print(f'read_pickle: \n{read_pkl}')
 
 
 
