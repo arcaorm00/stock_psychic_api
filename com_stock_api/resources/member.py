@@ -599,7 +599,7 @@ class MemberDao(MemberDto):
         refined_members = mmdp.hook_process(df)
         print(f'REFINED_MEMBERS: \n{refined_members}')
         refined_members = refined_members.drop('exited', axis=1)
-        refined_members = [np.array(refined_members, dtype = np.float32)]
+        refined_members = [np.array(refined_members, dtype=np.float32)]
         print(f'REFINED_MEMBERS AFTER NUMPY ARRAY: \n{refined_members}')
 
         path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'member')
@@ -610,6 +610,10 @@ class MemberDao(MemberDto):
 
         df['probability_churn'] = model_pred
         print(f'LAST DATAFRAME: {df}')
+
+        # admin = {'email': 'admin@stockpsychic.com', 'password': '1234', 'name': 'Admin', 'profile': 'noimage.png', 'geography': 'Spain',
+        # 'gender': '', 'age': '', 'tenure': 100, 'stock_qty': 0, 'balance': 0, 'as_credit': 0, 'credit_score': 0, 'is_active_member': 1, 
+        # 'estimated_salary': 0, 'role': 'ROLE_ADMIN', 'probability_churn': -1, 'exited': 0}
 
         session.bulk_insert_mappings(MemberDto, df.to_dict(orient="records"))
         session.commit()
@@ -648,6 +652,8 @@ class MemberDao(MemberDto):
 # =====================================================================
 # =====================================================================
 
+
+from sklearn.model_selection import KFold, cross_val_score
 
 
 
@@ -717,7 +723,7 @@ class MemberChurnPredModel(object):
         checkpoint_path = os.path.join(self.path, 'member_churn_train', 'cp.ckpt')
         cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
-        self.model.fit(self.x_train, self.y_train, epochs=50, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
+        self.model.fit(self.x_train, self.y_train, epochs=500, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
         self.model.load_weights(checkpoint_path)
         

@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 from com_stock_api.ext.db import db, openSession
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, joinedload
 from sqlalchemy import create_engine
 import pandas as pd
 import os
@@ -144,6 +144,14 @@ class USCovidDao(USCovidDto):
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
+    @classmethod
+    def find_only_us(cls):
+        return session.query(USCovidDto).with_entities(USCovidDto.total_cases, USCovidDto.total_deaths)
+
+    @classmethod
+    def find_only_ca(cls):
+        return session.query(USCovidDto).with_entities(USCovidDto.ca_cases, USCovidDto.ca_deaths)
+
 # =============================================================
 # =============================================================
 # =====================    CONTROLLER    ======================
@@ -190,6 +198,35 @@ class USCovid(Resource):
         uscovid.save()
         return uscovid.json()
 
+class USNewCases(Resource):
+    @staticmethod
+    def get():
+        print("====uscovid.py / TotalCases's get ")
+        query = USCovidDao.find_only_us()
+        df = pd.read_sql_query(query.statement, query.session.bind)
+        df['new_cases'] = df.total_cases.diff().fillna(0)
+        df['new_death'] = df.total_deaths.diff().fillna(0)
+        df =df.astype(int)
+        data = json.loads(df.to_json(orient="records"))
+        return data, 200
+
+
+
+class CANewCases(Resource):
+    @staticmethod
+    def get():
+        print("====uscovid.py / TotalCases's get ")
+        query = USCovidDao.find_only_ca()
+        df = pd.read_sql_query(query.statement, query.session.bind)
+        df['new_cases'] = df.ca_cases.diff().fillna(0)
+        df['new_death'] = df.ca_deaths.diff().fillna(0)
+        df =df.astype(int)
+        data = json.loads(df.to_json(orient="records"))
+        return data, 200
+
 class USCovids(Resource):
     def get():
         return USCovidDao.find_all(), 200
+
+if __name__ == "__main__":
+    CANewCases.get()
