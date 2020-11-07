@@ -1,6 +1,6 @@
 from com_stock_api.ext.db import db, openSession
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Table, MetaData
 import datetime
 from com_stock_api.resources.member import MemberDto
 
@@ -219,24 +219,18 @@ class BoardDao(BoardDto):
 
     @classmethod
     def delete_board(cls, id):
-        # 트랜잭션 필요
+        try:
+            db.engine.execute(f'delete from comments where board_id = {id}')
+            data = cls.query.get(id)
+            db.session.delete(data)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+        finally:
+            db.session.close()
 
-        # comments = CommentDao.find_by_boardid(id)
-        # print(f'delete board comments: {comments}')
-        # print(f'delete board comments: {type(comments)}')
-        # for c in comments:
-        #     CommentDao.delete_comment(c)
         
-        # File "C:\Users\saltQ\stock_psychic_api\com_stock_api\resources\board.py", line 6, in <module>
-        #     from com_stock_api.resources.comment import CommentDao
-        # File "C:\Users\saltQ\stock_psychic_api\com_stock_api\resources\comment.py", line 2, in <module>
-        #     from com_stock_api.resources.board import BoardDto
-        # ImportError: cannot import name 'BoardDto' from 'com_stock_api.resources.board' (C:\Users\saltQ\stock_psychic_api\com_stock_api\resources\board.py)
-
-        data = cls.query.get(id)
-        db.session.delete(data)
-        db.session.commit()
-        db.session.close()
 
 
 
