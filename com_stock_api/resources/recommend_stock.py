@@ -139,6 +139,8 @@ class RecommendStockPreprocessing():
 class RecommendStockModel():
 
     def __init__(self):
+        self.path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'recommend_stock')
+
         self._this_mem = tf.placeholder(tf.float32, name='this_member')
         self._target_mem = tf.placeholder(tf.float32, name='target_member')
         self._feed_dict = {}
@@ -191,10 +193,12 @@ class RecommendStockModel():
         target = self._target_mem
         feed_dict = self._feed_dict
 
-        main_m = np.linalg.norm(feed_dict['this_member'])
-        row_mem = np.linalg.norm(feed_dict['target_member'])
-        print(f'main_m: {main_m}')
-        print(f'row_mem: {row_mem}')
+        _main_norm = tf.norm(this, name='this_norm')
+        _row_norm = tf.norm(target, name='target_norm')
+        # main_m = np.linalg.norm(feed_dict['this_member'])
+        # row_mem = np.linalg.norm(feed_dict['target_member'])
+        # print(f'_main_norm: {_main_norm}')
+        # print(f'_row_norm: {_row_norm}')
 
         expr = tf.tensordot(this, target, 1, name='member_dot')
         expr_div = tf.divide(this, target, name='member_div')
@@ -202,12 +206,21 @@ class RecommendStockModel():
         with tf.Session() as sess:
             _ = tf.Variable(initial_value='fake_variable')
             sess.run(tf.global_variables_initializer())
+
+            main_m = sess.run(_main_norm, {this: feed_dict['this_member']})
+            row_mem = sess.run(_row_norm, {target: feed_dict['target_member']})
+            print(f'main_m: {main_m}')
+            print(f'row_mem: {row_mem}')
+
             prod = sess.run(expr, {this: feed_dict['this_member'], target: feed_dict['target_member']})
             print(f'PROD: {prod}')
-            result = sess.run(expr_div, {this: prod, target: (main_m*row_mem)})
-            print(f'RESULT: {result}')
-            # saver = tf.train.Saver()
-            # saver.save(sess, './models/...', global_step=1000)
+            similarity = sess.run(expr_div, {this: prod, target: (main_m*row_mem)})
+            print(f'SIMILARITY: {similarity}')
+            
+            checkpoint_path = os.path.join(self.path, 'recommend_stock_checkpoint', 'cp.ckpt')
+            saver = tf.train.Saver()
+            saver.save(sess, checkpoint_path, global_step=1000)
+            
 
         
         # prod = np.dot(this_member.loc[email, base_columns], else_members.loc[mem, base_columns])
