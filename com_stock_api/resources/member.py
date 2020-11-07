@@ -336,7 +336,7 @@ class MemberModelingDataPreprocessing:
 
     @staticmethod
     def gender_nominal(this):
-        gender_mapping = {'Male': 0, 'Female': 1, 'Etc.': 2}
+        gender_mapping = {'Etc.': 0, 'Male': 1, 'Female': 2}
         this.train['gender'] = this.train['gender'].map(gender_mapping)
         this.train = this.train
         return this
@@ -660,9 +660,6 @@ class MemberDao(MemberDto):
 # =====================================================================
 
 
-from sklearn.model_selection import KFold, cross_val_score
-
-
 
 
 class MemberChurnPredModel(object):
@@ -685,6 +682,7 @@ class MemberChurnPredModel(object):
         self.train_model()
         self.eval_model()
         self.save_model()
+        self.load_model()
         self.debug_model()
 
         
@@ -720,7 +718,11 @@ class MemberChurnPredModel(object):
         print('********** create model **********')
         model = tf.keras.Sequential()
         model.add(tf.keras.layers.Dense(16, activation='relu'))
+        model.add(tf.keras.layers.Dropout(0.5))
+        model.add(tf.keras.layers.Dense(16, activation='relu'))
+        model.add(tf.keras.layers.Dropout(0.5))
         model.add(tf.keras.layers.Dense(1, activation='sigmoid')) # output
+
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         self.model = model
  
@@ -733,7 +735,6 @@ class MemberChurnPredModel(object):
         self.model.fit(self.x_train, self.y_train, epochs=500, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
         self.model.load_weights(checkpoint_path)
-        
         self.model.save_weights(checkpoint_path.format(epoch=0))
         
     # 모델 평가
@@ -745,6 +746,13 @@ class MemberChurnPredModel(object):
 
     def save_model(self):
         self.model.save(os.path.join(self.path, 'member_churn.h5'))
+    
+    def load_model(self):
+        self.new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
+        self.new_model.summary()
+        self.get_data()
+        loss, acc = self.new_model.evaluate(self.x_test, self.y_test, verbose=2)
+        print('Accuracy of NEW Model: {:5.2f}%'.format(100 * acc))
  
     # 모델 디버깅
     def debug_model(self):
