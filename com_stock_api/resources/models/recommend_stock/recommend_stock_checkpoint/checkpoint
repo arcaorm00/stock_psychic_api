@@ -1,2 +1,2 @@
-model_checkpoint_path: "C:\\Users\\saltQ\\stock_psychic_api\\com_stock_api\\resources\\models\\recommend_stock\\recommend_stock_checkpoint\\cp.ckpt-1000"
-all_model_checkpoint_paths: "C:\\Users\\saltQ\\stock_psychic_api\\com_stock_api\\resources\\models\\recommend_stock\\recommend_stock_checkpoint\\cp.ckpt-1000"
+model_checkpoint_path: "C:\\Users\\saltQ\\stock_psychic_api\\com_stock_api\\resources\\models\\recommend_stock\\recommend_stock_checkpoint\\similarity.ckpt-1000"
+all_model_checkpoint_paths: "C:\\Users\\saltQ\\stock_psychic_api\\com_stock_api\\resources\\models\\recommend_stock\\recommend_stock_checkpoint\\similarity.ckpt-1000"
