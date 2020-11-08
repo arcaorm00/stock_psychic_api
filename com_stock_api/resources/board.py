@@ -195,6 +195,7 @@ class BoardDao(BoardDto):
     def save(board):
         db.session.add(board)
         db.session.commit()
+        db.close()
 
     @staticmethod
     def insert_many():

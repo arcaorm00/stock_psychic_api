@@ -293,7 +293,7 @@ parser.add_argument('trading_date', type=str, required=True, help='This field ca
 class Trading(Resource):        
         
     @staticmethod
-    def post():
+    def post(id):
         body = request.get_json()
         print(f'body: {body}')
         trading = TradingDto(**body)
@@ -303,7 +303,7 @@ class Trading(Resource):
     @staticmethod
     def get(id):
         try:
-            trading = TradingDao.find_by_email(id)
+            trading = TradingDao.find_by_id(id)
             if trading:
                 return trading
         except Exception as e:
