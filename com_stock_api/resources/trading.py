@@ -220,8 +220,8 @@ class TradingDao(TradingDto):
         return json.loads(df.to_json(orient='records'))
 
     @classmethod
-    def find_by_id(cls, trading):
-        sql = cls.query.filter(cls.id == trading.id)
+    def find_by_id(cls, id):
+        sql = cls.query.filter(cls.id == id)
         df = pd.read_sql(sql.statement, sql.session.bind)
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
@@ -303,7 +303,7 @@ class Trading(Resource):
     @staticmethod
     def get(id):
         try:
-            trading = TradingDao.find_by_id(id)
+            trading = TradingDao.find_by_email(id)
             if trading:
                 return trading
         except Exception as e:

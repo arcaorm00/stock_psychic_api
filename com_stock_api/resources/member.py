@@ -733,6 +733,8 @@ class MemberChurnPredModel(object):
         cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=1)
         
         self.model.fit(self.x_train, self.y_train, epochs=500, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
+        # self.get_data()
+        # self.model.fit(self.x_train, self.y_train, epochs=5000, callbacks=[cp_callback], validation_data=(self.x_validation, self.y_validation), verbose=1)  
 
         self.model.load_weights(checkpoint_path)
         self.model.save_weights(checkpoint_path.format(epoch=0))
@@ -974,7 +976,7 @@ class MemberNameSearch(Resource):
     def get(name):
         try:
             member = MemberDao.find_by_name(name)
-            print(f'member: {member}')
+            # print(f'member: {member}')
             if member:
                 return member, 200
         except Exception as e:
