@@ -99,7 +99,9 @@ class TradingPro:
             if int(member['balance']) <= 0: continue
             
             # tickers의 값 중 회원의 stock_qty 수만큼 랜덤 추출
-            random_ticker = random.sample(tickers, k=members_trading_qty)
+            random_ticker = random.choices(tickers, k=members_trading_qty)
+            while len(set(random_ticker)) < members_trading_qty:
+                random_ticker = random.choices(tickers, k=members_trading_qty)
 
             for tick in random_ticker:
                 email = member['email']
@@ -274,6 +276,8 @@ class RecommendStocksWithSimilarity():
         
         isExitedMem = refined_members[refined_members['exited']==1].index
         refined_members = refined_members.drop(isExitedMem)
+        isZeroBalMem = refined_members[refined_members['balance']==0].index
+        refined_members = refined_members.drop(isZeroBalMem)
 
         refined_members.set_index(refined_members['email'], inplace=True)
         refined_members = refined_members.drop(['email'], axis=1)
