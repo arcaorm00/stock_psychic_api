@@ -18,6 +18,10 @@ from sqlalchemy import func
 import datetime
 import operator
 
+import os
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 
 
 '''
@@ -250,6 +254,9 @@ class RecommendStockPreprocessing():
 
 
 
+
+
+
 # =====================================================================
 # =====================================================================
 # =====================      similarity      ==========================
@@ -258,6 +265,82 @@ class RecommendStockPreprocessing():
 
 
 
+class RecommendStockModel():
+    
+    def __init__(self):
+        self.path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'models', 'recommend_stock')
+
+        self._this_mem = tf.placeholder(tf.float32, name='this_member')
+        self._target_mem = tf.placeholder(tf.float32, name='target_member')
+        self._feed_dict = {}
+    
+    def hook(self):
+        self.substitute()
+        
+    def substitute(self):
+        members = pd.read_sql_table('members', engine.connect())
+        preprocessing = RecommendStockPreprocessing()
+        refined_members = preprocessing.hook_process(members)
+        
+        isExitedMem = refined_members[refined_members['exited']==1].index
+        refined_members = refined_members.drop(isExitedMem)
+        print(f'REFINED MEMBERS: \n{refined_members}')
+
+        refined_members.set_index(refined_members['email'], inplace=True)
+        refined_members = refined_members.drop(['email'], axis=1)
+        print(f'REFINED MEMBERS AFTER EMAIL INDEXING: \n{refined_members}')
+
+        base_columns = refined_members.columns
+
+        for email in refined_members.index:
+
+            this_member = pd.DataFrame(refined_members.loc[email, base_columns]).T
+            else_members = refined_members.loc[:, base_columns].drop(email, axis=0)
+
+            for mem in else_members.index:
+
+                self._feed_dict = {'this_member': this_member.loc[email, base_columns], 'target_member': else_members.loc[mem, base_columns]}
+                self.create_similarity_model()
+
+            #     if mem == '15565806@gmail.com': break          
+            # if mem == '15565806@gmail.com': break
+          
+    def create_similarity_model(self):
+        this = self._this_mem
+        target = self._target_mem
+        feed_dict = self._feed_dict
+
+        _main_norm = tf.norm(this, name='this_norm')
+        _row_norm = tf.norm(target, name='target_norm')
+
+        expr_dot = tf.tensordot(this, target, 1, name='member_dot')
+        expr_div = tf.divide(this, target, name='member_div')
+
+        with tf.Session() as sess:
+            _ = tf.Variable(initial_value='fake_variable')
+            sess.run(tf.global_variables_initializer())
+
+            main_m = sess.run(_main_norm, {this: feed_dict['this_member']})
+            row_mem = sess.run(_row_norm, {target: feed_dict['target_member']})
+            print(f'main_m: {main_m}')
+            print(f'row_mem: {row_mem}')
+
+            prod = sess.run(expr_dot, {this: feed_dict['this_member'], target: feed_dict['target_member']})
+            print(f'PROD: {prod}')
+            similarity = sess.run(expr_div, {this: prod, target: (main_m*row_mem)})
+            print(f'SIMILARITY: {similarity}')
+            
+            checkpoint_path = os.path.join(self.path, 'recommend_stock_checkpoint', 'similarity.ckpt')
+            saver = tf.train.Saver()
+            saver.save(sess, checkpoint_path, global_step=1000)
+
+
+# if __name__ == '__main__':
+#     rsmodel = RecommendStockModel()
+#     rsmodel.hook()
+
+
+# 위의 checkpoint 저장이 너무 느려 아래 방식으로 수정
 from scipy.spatial.distance import pdist, squareform
         
 class RecommendStocksWithSimilarity():
@@ -271,6 +354,7 @@ class RecommendStocksWithSimilarity():
     @staticmethod
     def similarity(email):
         members = pd.read_sql_table('members', engine.connect())
+        engine.connect().close()
         isZeroBalMem = members[(members['balance'] == 0) & (members['email'] != email)].index
         members = members.drop(isZeroBalMem)
 
@@ -509,7 +593,7 @@ class Trading(Resource):
         args = parser.parse_args()
         print(f'Trading {args} updated')
         try:
-            TradingDao.update(args)
+            TradingDao.modify_trading(args)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)
@@ -518,7 +602,7 @@ class Trading(Resource):
     @staticmethod
     def delete(id):
         try:
-            TradingDao.delete(id)
+            TradingDao.delete_trading(id)
             return {'code': 0, 'message': 'SUCCESS'}, 200
         except Exception as e:
             print(e)

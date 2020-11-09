@@ -590,6 +590,14 @@ class MemberDao(MemberDto):
 
     @staticmethod
     def save(member):
+        mcp = MemberChurnPredService()
+        mcp.assign(member)
+        prediction = mcp.predict()
+        
+        prediction = round(prediction[0, 0], 5)
+        print(f'PREDICTION: {prediction}')
+        member.probability_churn = float(prediction)
+
         db.session.add(member)
         db.session.commit()
 
@@ -631,12 +639,23 @@ class MemberDao(MemberDto):
     def update(member):
         Session = openSession()
         session = Session()
+        
+        mcp = MemberChurnPredService()
+        mcp.assign(member)
+        prediction = mcp.predict()
+        
+        prediction = round(prediction[0, 0], 5)
+        print(f'PREDICTION: {prediction}')
+        member.probability_churn = float(prediction)
+
+        print(member)
+
         member = session.query(MemberDto)\
         .filter(MemberDto.email==member.email)\
-        .update({MemberDto.password: member['password'], MemberDto.name: member['name'], MemberDto.profile: member['profile'], MemberDto.geography: member['geography'],
-        MemberDto.gender: member['gender'], MemberDto.age: member['age'], MemberDto.tenure: member['tenure'], MemberDto.stock_qty: member['stock_qty'], MemberDto.balance: member['balance'],
-        MemberDto.has_credit: member['has_credit'], MemberDto.credit_score: member['credit_score'], MemberDto.is_active_member: member['is_active_member'], MemberDto.estimated_salary: member['estimated_salary'],
-        MemberDto.role: member['role'], MemberDto.probability_churn: member['probability_churn'], MemberDto.exited: member['exited']})
+        .update({MemberDto.password: member.password, MemberDto.name: member.name, MemberDto.profile: member.profile, MemberDto.geography: member.geography,
+        MemberDto.gender: member.gender, MemberDto.age: member.age, MemberDto.tenure: member.tenure, MemberDto.stock_qty: member.stock_qty, MemberDto.balance: member.balance,
+        MemberDto.has_credit: member.has_credit, MemberDto.credit_score: member.credit_score, MemberDto.is_active_member: member.is_active_member, MemberDto.estimated_salary: member.estimated_salary,
+        MemberDto.role: member.role, MemberDto.probability_churn: member.probability_churn, MemberDto.exited: member.exited})
         session.commit()
         session.close()
     
@@ -799,6 +818,7 @@ class MemberChurnPredService(object):
 
         mmdp = MemberModelingDataPreprocessing()
         refined_member = mmdp.hook_process(member)
+        print(refined_member)
     
         self.geography = refined_member['geography'][0]
         self.gender = refined_member['gender'][0]
@@ -812,12 +832,14 @@ class MemberChurnPredService(object):
         self.AgeGroup = refined_member['AgeGroup'][0]
 
     def predict(self):
-        new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
-        new_model.summary()
+        
 
         data = [[self.geography, self.gender, self.tenure, self.stock_qty, self.balance, self.has_credit,
          self.credit_score, self.is_active_member, self.estimated_salary, self.AgeGroup], ]
         print(f'predict data: \n {data}')
+
+        new_model = tf.keras.models.load_model(os.path.join(self.path, 'member_churn.h5'))
+        new_model.summary()
         data = np.array(data, dtype = np.float32)
         
         pred = new_model.predict(data)
@@ -890,6 +912,7 @@ class Member(Resource):
     @staticmethod
     def put(email: str):
         args = parser.parse_args()
+        args = MemberDto(**args)
         print(f'Member {args} updated')
         try:
             MemberDao.update(args)
@@ -928,16 +951,7 @@ class Auth(Resource):
         if len(MemberDao.find_by_email_exactly(member.email)) > 0:
             return {'message': 'already exist'}, 500
 
-        mcp = MemberChurnPredService()
-        mcp.assign(member)
-        prediction = mcp.predict()
-        
-        prediction = round(prediction[0, 0], 5)
-        print(f'PREDICTION: {prediction}')
-        member.probability_churn = float(prediction)
-
         MemberDao.save(member)
-
         email = member.email
         return {'email': str(email)}, 200
     
