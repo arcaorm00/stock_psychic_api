@@ -271,13 +271,16 @@ class RecommendStocksWithSimilarity():
     @staticmethod
     def similarity(email):
         members = pd.read_sql_table('members', engine.connect())
+        isZeroBalMem = members[(members['balance'] == 0) & (members['email'] != email)].index
+        members = members.drop(isZeroBalMem)
+
         preprocessing = RecommendStockPreprocessing()
         refined_members = preprocessing.hook_process(members)
         
         isExitedMem = refined_members[refined_members['exited']==1].index
         refined_members = refined_members.drop(isExitedMem)
-        isZeroBalMem = refined_members[refined_members['balance']==0].index
-        refined_members = refined_members.drop(isZeroBalMem)
+        isLessBalMem = refined_members[(refined_members['balance'] <= 2) & (refined_members['email'] != email)].index
+        refined_members = refined_members.drop(isLessBalMem)
 
         refined_members.set_index(refined_members['email'], inplace=True)
         refined_members = refined_members.drop(['email'], axis=1)
@@ -309,7 +312,7 @@ class RecommendStocksWithSimilarity():
         stocks_list = [{'stock_ticker':s, 
         'stock_type': str(match_tradings[match_tradings['stock_ticker'] == s]['stock_type'].unique()[0]),
         'email': email} for s in stocks_size if s not in this_members_tradings]
-        return stocks_list
+        return stocks_list[:2]
 
 
 
@@ -416,6 +419,8 @@ class TradingDao(TradingDto):
     def get_recommend_stocks(cls, email):
         rs = RecommendStocksWithSimilarity()
         df = rs.hook_process(email)
+        # if len(df) <= 2:
+        #     df = cls.query(func.count(TradingDto.stock_ticker).label('cnt')).groupby(TradingDto.stock_ticker).order_by('cnt'.desc())
         print(json.loads(df.to_json(orient='records')))
         return json.loads(df.to_json(orient='records'))
         

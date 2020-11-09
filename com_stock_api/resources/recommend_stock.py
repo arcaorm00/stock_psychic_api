@@ -328,6 +328,7 @@ class RecommendStocksWithSimilarity():
         refined_members = refined_members.drop(isExitedMem)
         isZeroBalMem = refined_members[refined_members['balance']==0].index
         refined_members = refined_members.drop(isZeroBalMem)
+        print(len(refined_members))
 
         refined_members.set_index(refined_members['email'], inplace=True)
         refined_members = refined_members.drop(['email'], axis=1)
