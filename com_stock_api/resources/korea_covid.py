@@ -4,11 +4,13 @@ from flask import request
 from flask_restful import Resource, reqparse
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.utils.file_helper import FileReader
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from pathlib import Path
 from flask import jsonify
 import pandas as pd
 import json
+import numpy as np
+from sqlalchemy import and_,or_,func
 
 
 # ==============================================================
@@ -29,7 +31,7 @@ class Covidedit():
         del df_kor['tested']
         del df_kor['negative']
         df_kor.columns =['date','total_cases','total_deaths']
-        df_kor['date']=pd.to_datetime(df_kor['date'].astype(str), format='%Y/%m/%d')
+        df_kor['date']=pd.to_datetime(df_kor['date'].astype(str), format='%Y-%m-%d')
         print(df_kor)
 
         #print(df_reg)
@@ -39,7 +41,7 @@ class Covidedit():
         del df_reg['released']
         df_reg.columns =['date','seoul_cases','seoul_deaths']
         #print(df_reg)
-        df_reg['date']=pd.to_datetime(df_reg['date'].astype(str), format='%Y/%m/%d')
+        df_reg['date']=pd.to_datetime(df_reg['date'].astype(str), format='%Y-%m-%d')
         print(df_reg)
         
         df_all = pd.merge(df_kor,df_reg, on=['date','date'],how='left')
@@ -62,10 +64,10 @@ class KoreaDto(db.Model):
     
     id: int = db.Column(db.Integer, primary_key = True, index = True)
     date : str = db.Column(db.DATE)
-    seoul_cases : int = db.Column(db.String(30))
-    seoul_deaths : int = db.Column(db.String(30))
-    total_cases : int = db.Column(db.String(30))
-    total_deaths : int = db.Column(db.String(30))
+    seoul_cases : int = db.Column(db.Integer)
+    seoul_deaths : int = db.Column(db.Integer)
+    total_cases : int = db.Column(db.Integer)
+    total_deaths : int = db.Column(db.Integer)
     
     def __init__(self, id,date, seoul_cases, seoul_deaths, total_cases, total_deaths):
         self.date = date
@@ -92,10 +94,10 @@ class KoreaDto(db.Model):
 class KoreaVo:
     id : int = 0
     date: str = ''
-    seoul_cases : int =''
-    seoul_deaths : int =''
-    total_cases : int =''
-    total_deaths : int =''
+    seoul_cases : int =0
+    seoul_deaths : int =0
+    total_cases : int =0
+    total_deaths : int =0
 
 Session = openSession()
 session= Session()
@@ -137,7 +139,7 @@ class KoreaDao(KoreaDto):
 
     @classmethod
     def find_all(cls):
-        sql = cls.query
+        sql = cls.query.order_by(cls.date.desc())
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
@@ -164,6 +166,18 @@ class KoreaDao(KoreaDto):
     @classmethod
     def find_by_date(cls, date):
         return session.query(KoreaDto).filter(KoreaDto.date.like(date)).all()
+    
+    @classmethod
+    def find_only_ko(cls):
+        return session.query(KoreaDto).with_entities(KoreaDto.total_cases, KoreaDto.total_deaths)
+
+    @classmethod
+    def find_only_se(cls):
+        return session.query(KoreaDto).with_entities(KoreaDto.seoul_cases, KoreaDto.seoul_deaths)
+
+    @classmethod
+    def find_by_period(cls,start_date, end_date):
+        return session.query(KoreaDto).filter(KoreaDto.date >= start_date).filter(KoreaDto.date <= end_date)
 
 
 
@@ -209,13 +223,47 @@ class KoreaCovid(Resource):
         kcovid.date = data['date']
         kcovid.total_cases = data['total_cases']
         kcovid.total_deaths = data['total_deaths']
-        kcovid.seodul_cases = data['seoul_cases']
+        kcovid.seoul_cases = data['seoul_cases']
         kcovid.seoul_deaths = data['seoul_deaths']
         kcovid.save()
         return kcovid.json()
 
+class KOCases(Resource):
+    @staticmethod
+    def get():
+        query = KoreaDao.find_only_ko()
+        df = pd.reae_sql_query(query.statment, query.session.bind)
+        df['ko_cases'] = df.total_cases.diff().fillna(0)
+        df['ko_deaths'] = df.total_deaths.diff().fillna(0)
+        df = df.astype(int)
+        data = json.loads(df.to_json(orient="records"))
+        return data, 200
+
+class SEcases(Resource):
+    @staticmethod
+    def get():
+        query = KoreaDao.find_only_se()
+        df = pd.read_sql_query(query.statement, query.session.bind)
+        df['se_cases'] = df.seoul_cases.diff().fillna(0)
+        df['se_deaths'] = df.seoul_deaths.diff().fillna(0)
+        df = df.astype(int)
+        data = json.loads(df.to_json(orient="records"))
+        return data, 200
+
 class KoreaCovids(Resource):
-    def get(self):
-        return KoreaDao.find_all(), 200
+    @staticmethod
+    def get():
+        query = KoreaDao.find_by_period("2020-01-01","2020-06-30")
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        df['ko_cases'] = df.total_cases.diff().fillna(0).astype(np.int64)
+        df['ko_deaths'] = df.total_deaths.diff().fillna(0).astype(np.int64)
+        df['se_cases'] = df.seoul_cases.diff().fillna(0).astype(np.int64)
+        df['se_deaths'] = df.seoul_deaths.diff().fillna(0).astype(np.int64)
+        data = json.loads(df.to_json(orient="records"))
+        return data, 200
 
 
+
+if __name__ == "__main__":
+    ko = KoreaCovids()
+    ko.get()
