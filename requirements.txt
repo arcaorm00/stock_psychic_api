@@ -20,8 +20,9 @@ xlrd==1.2.0
 flask-http-response==0.0.1.0
 flask-cors==3.0.8
 datetime ==4.3
-yfinance==0.1.55
 
+yfinance==0.1.55
+newspaper3k==0.2.8
 sklearn==0.0
 tensorflow==2.3.1
 tensorflow-datasets==4.0.0
