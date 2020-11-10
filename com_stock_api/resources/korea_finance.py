@@ -129,7 +129,7 @@ class StockDto(db.Model):
         return f'id={self.id}, date={self.date}, open={self.open},\
             close={self.close}, high={self.high}, low={self.low}, volume={self.volume}, ticker={self.ticker}'
             
-    @property
+
     def json(self):
         return {
             'id':self.id,
@@ -349,3 +349,6 @@ class lginnotek(Resource):
         data = StockDao.find_all_by_ticker(stock)
         #return data.json(), 200
         return data[0], 200
+
+
+

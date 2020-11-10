@@ -15,7 +15,8 @@ from flask import jsonify
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
-
+import csv
+from pathlib import Path
 
 
 # ==============================================================
@@ -123,10 +124,10 @@ class NewsDao(NewsDto):
         return session.query(NewsDto).filter(NewsDto.ticker.ilike(tic))
 
     @classmethod
-    def find_all_by_ticker(cls, stock):
+    def find_all_by_ticker(cls, lnews):
         sql = cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
-        df = df[df['ticker'] == stock.ticker]
+        df = df[df['ticker'] == lnews.ticker]
         return json.loads(df.to_json(orient='records'))
     
     @classmethod
@@ -195,23 +196,22 @@ class News(Resource):
     
     @staticmethod
     def get(ticker):
-        args = parser.parse_args()
-        stock = NewsVo()
-        stock.ticker = ticker
-        data = NewsDao.find_all_by_ticker(stock)
-        return data, 200
+        lnews =  NewsDao.find_all_by_ticker(ticker)
+        if lnews:
+            return lnews.json()
+        return {'message': 'The recent lnews was not found'}, 404
 
     def put(self, id):
         data = News.parser.parse_args()
-        stock = NewsDao.find_by_id(id)
+        lnews = NewsDao.find_by_id(id)
 
-        stock.date = data['date']
-        stock.ticker = data['ticker']
-        stock.url = data['url']
-        stock.headline = data['headline']
-        stock.label=data['label']
-        stock.save()
-        return stock.json()
+        lnews.date = data['date']
+        lnews.ticker = data['ticker']
+        lnews.url = data['url']
+        lnews.headline = data['headline']
+        lnews.label=data['label']
+        lnews.save()
+        return lnews.json()
 
 class News_(Resource):
     def get(self):
@@ -232,14 +232,26 @@ class Lgchem_Label(Resource):
     
     @classmethod
     def get(cls):
+        path = os.path.abspath(__file__+"/.."+"/data/")
         query = NewsDao.find_by_ticker('051910')
         df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
         means = df.resample('D', on='date').mean().dropna()
+        print(type(means))
         print(means)
+        # f = open(means, 'r', encoding='UTF-8') 
+        # line = f.readline() 
+        # f.close() 
+        # json_data = json.loads(line) 
+        # data = json_data['data'] 
+        means.to_csv(path+'/lgchem_label.csv', header=True, index=True,encoding='utf-8')
+
+
         means.insert(0, 'date', means.index)
         data = json.loads(means.to_json(orient='records'))
-        #print(data)
+
         return data, 200
+
+
 
 """
                    id     label
@@ -252,18 +264,19 @@ class Lginnotek_Label(Resource):
     
     @classmethod
     def get(cls):
+        path = os.path.abspath(__file__+"/.."+"/data/")
         query = NewsDao.find_by_ticker('011070')
         df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
         means = df.resample('D', on='date').mean().dropna()
         print(means)
+        means.to_csv(path+'/lginnotek_label.csv', header=True, index=True,encoding='utf-8')
         means.insert(0, 'date', means.index)
         data = json.loads(means.to_json(orient='records'))
-        #print(data)
         return data, 200
 
 
     
 
 # if __name__ =='__main__':
-#     r = Lgchem_Label()
+#     r = Lginnotek_Label()
 #     r.get()

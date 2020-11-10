@@ -28,7 +28,7 @@ class Covidedit():
         del df_kor['released']
         del df_kor['tested']
         del df_kor['negative']
-        df_kor.columns =['date','total_cases','total_death']
+        df_kor.columns =['date','total_cases','total_deaths']
         df_kor['date']=pd.to_datetime(df_kor['date'].astype(str), format='%Y/%m/%d')
         print(df_kor)
 
@@ -37,7 +37,7 @@ class Covidedit():
         #print(df_reg)
         del df_reg['region']
         del df_reg['released']
-        df_reg.columns =['date','seoul_cases','seoul_death']
+        df_reg.columns =['date','seoul_cases','seoul_deaths']
         #print(df_reg)
         df_reg['date']=pd.to_datetime(df_reg['date'].astype(str), format='%Y/%m/%d')
         print(df_reg)
@@ -45,7 +45,7 @@ class Covidedit():
         df_all = pd.merge(df_kor,df_reg, on=['date','date'],how='left')
         df_all = df_all.fillna(0)
         df_all['seoul_cases'] = df_all['seoul_cases'].astype(int)
-        df_all['seoul_death'] = df_all['seoul_death'].astype(int)
+        df_all['seoul_deaths'] = df_all['seoul_deaths'].astype(int)
         df_all.set_index('date', inplace=True)
         print(df_all)
 
@@ -63,11 +63,11 @@ class KoreaDto(db.Model):
     id: int = db.Column(db.Integer, primary_key = True, index = True)
     date : str = db.Column(db.DATE)
     seoul_cases : int = db.Column(db.String(30))
-    seoul_death : int = db.Column(db.String(30))
+    seoul_deaths : int = db.Column(db.String(30))
     total_cases : int = db.Column(db.String(30))
-    total_death : int = db.Column(db.String(30))
+    total_deaths : int = db.Column(db.String(30))
     
-    def __init__(self, id,date, seoul_cases, seoul_death, total_cases, total_death):
+    def __init__(self, id,date, seoul_cases, seoul_deaths, total_cases, total_deaths):
         self.date = date
         self.seoul_cases = seoul_cases
         self.seoul_death = seoul_death
@@ -76,7 +76,7 @@ class KoreaDto(db.Model):
     
     def __repr__(self):
         return f'id={self.id},date={self.date}, seoul_cases={self.seoul_cases},\
-            seoul_death={self.seoul_death},total_cases={self.total_cases},total_deatb={self.total_death}'
+            seoul_death={self.seoul_deaths},total_cases={self.total_cases},total_deaths={self.total_deaths}'
             
     @property
     def json(self):
@@ -84,18 +84,18 @@ class KoreaDto(db.Model):
             'id':self.id,
             'date': self.date,
             'seoul_cases' : self.seoul_cases,
-            'seoul_death' : self.seoul_death,
+            'seoul_deaths' : self.seoul_deaths,
             'total_cases' : self.total_cases,
-            'total_death' : self.total_death
+            'total_deaths' : self.total_deaths
         }
 
 class KoreaVo:
     id : int = 0
     date: str = ''
     seoul_cases : int =''
-    seoul_death : int =''
+    seoul_deaths : int =''
     total_cases : int =''
-    total_deat : int =''
+    total_deaths : int =''
 
 Session = openSession()
 session= Session()
@@ -150,7 +150,7 @@ class KoreaDao(KoreaDto):
         return session.qeury(KoreaDto).filter(KoreaDto.seoul_cases.like(seoul_cases)).one()
 
     @classmethod
-    def find_by_seouldeath(cls,seoul_death):
+    def find_by_seouldeaths(cls,seoul_death):
         return session.query(KoreaDto).filter(KoreaDto.seoul_death.like(seoul_death)).one()
 
     @classmethod
@@ -158,7 +158,7 @@ class KoreaDao(KoreaDto):
         return session.query(KoreaDto).filter(KoreaDto.total_cases.like(total_cases)).one()
     
     @classmethod
-    def find_by_totaldeath(cls,total_death):
+    def find_by_totaldeaths(cls,total_death):
         return session.query(KoreaDto).filter(KoreaDto.total_death.like(total_death)).one()
     
     @classmethod
@@ -178,9 +178,9 @@ parser = reqparse.RequestParser()
 parser.add_argument('id',type=int, required=True,help='This field cannot be left blank')
 parser.add_argument('date',type=str, required=True,help='This field cannot be left blank')
 parser.add_argument('seoul_cases',type=int, required=True,help='This field cannot be left blank')
-parser.add_argument('seoul_death',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('seoul_deaths',type=int, required=True,help='This field cannot be left blank')
 parser.add_argument('total_cases',type=int, required=True,help='This field cannot be left blank')
-parser.add_argument('total_death',type=int, required=True,help='This field cannot be left blank')
+parser.add_argument('total_deaths',type=int, required=True,help='This field cannot be left blank')
 
 
 class KoreaCovid(Resource):
@@ -188,7 +188,7 @@ class KoreaCovid(Resource):
     @staticmethod
     def post(self):
         data = self.parser.parse_args()
-        kcovid = KoreaDto(data['date'],data['seoul_cases'],data['seoul_death'],data['total_cases'],data['total_death'])
+        kcovid = KoreaDto(data['date'],data['seoul_cases'],data['seoul_deaths'],data['total_cases'],data['total_deaths'])
         try:
             kcovid.save(data)
             return {'code':0, 'message':'SUCCESS'},200
@@ -208,9 +208,9 @@ class KoreaCovid(Resource):
         kcovid = KoreaDao.find_by_id(id)
         kcovid.date = data['date']
         kcovid.total_cases = data['total_cases']
-        kcovid.total_deaths = data['total_death']
+        kcovid.total_deaths = data['total_deaths']
         kcovid.seodul_cases = data['seoul_cases']
-        kcovid.seoul_deaths = data['seoul_death']
+        kcovid.seoul_deaths = data['seoul_deaths']
         kcovid.save()
         return kcovid.json()
 

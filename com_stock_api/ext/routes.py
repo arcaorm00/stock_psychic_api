@@ -55,7 +55,7 @@ def initialize_routes(api):
 
     api.add_resource(KoreaCovid,'/kospi/koreacovid')
 
-    api.add_resource(lgchemNews,'/kospi/lgchemNews')
+    api.add_resource(lgchemNews,'/kospi/lgchemnews')
     api.add_resource(lginnoteknews,'/kospi/lginnoteknews')
     api.add_resource(Lgchem_Label, '/kospi/lgchem_label')
     api.add_resource(Lginnotek_Label, '/kospi/lginnotek_label')

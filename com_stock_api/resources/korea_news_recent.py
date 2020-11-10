@@ -19,6 +19,7 @@ from sqlalchemy.dialects.mysql import DATE
 import time
 import random
 
+
 # ==============================================================
 # =========================                =====================
 # =========================  Data Mining   =====================
@@ -95,7 +96,7 @@ class KoreaNews():
 
             result= {"date" : date_result, "headline" : title_result, "content" : article_result, "url" : link_result,"ticker":plusUrl.zfill(6)} 
             df_result = pd.DataFrame(result)
-            time.sleep( random.uniform(2,4) )
+            #time.sleep( random.uniform(2,4) )
 
 
 
@@ -138,7 +139,7 @@ class NewsDto(db.Model):
         return f'id={self.id},date={self.date}, headline={self.headline},\
             content={self.content},url={self.url},ticker={self.ticker}'
             
-    @property
+    
     def json(self):
         return {
             'id':self.id,
@@ -151,10 +152,10 @@ class NewsDto(db.Model):
 
 class NewsVo:
     id : int = 0
-    date: str =''
-    headline: str=''
-    content: str=''
-    url: str =''
+    date: str = ''
+    headline: str= ''
+    content: str= ''
+    url: str = ''
     ticker: str =''
 
 
@@ -302,6 +303,7 @@ class RNews(Resource):
     def put(self, id):
         data = RNews.parser.parse_args()
         rnews = RNewsDao.find_by_id(id)
+        print(rnews)
 
         rnews.date = data['date']
         rnews.ticker = data['ticker']
