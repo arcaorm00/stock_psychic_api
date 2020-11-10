@@ -374,7 +374,6 @@ class TeslaSentiment(Resource):
     @staticmethod
     def get():
         print("=====investingnews.py / TeslaSentiment's get")
-        # df = pd.read_sql_table('Investing_News', engine.connect())
         query = InvestingDao.find_by_ticker('TSLA')
         df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
         #Calculate mean values for each components; pos, neu, neg, compound
@@ -388,56 +387,34 @@ class TeslaSentiment(Resource):
 
 class InvestingGraph(Resource):
     
-    @classmethod
-    def apple_dataframe(cls):
-        print("============apple dataframe============")
-        # df = pd.read_sql_table('Investing_News', engine.connect())
-        query = InvestingDao.find_by_ticker('AAPL')
-        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
-        #Calculate mean values for each components; pos, neu, neg, compound
-        means = df.resample('D', on='date').mean().dropna()
-        means.insert(0, 'date', means.index)
-        data = json.loads(means.to_json(orient='records'))
-        return data 
-    '''
-    Index(['id', 'date', 'ticker', 'link', 'headline', 'neg', 'pos', 'neu',
-        'compound'],
-        dtype='object')
-                index     id       neg       pos       neu  compound
-    date                                                            
-    2020-01-01    0.0    1.0  0.046000  0.071000  0.883000  0.743000
-    2020-01-02    3.0    4.0  0.038200  0.106000  0.855400  0.931120
-    2020-01-03    6.5    7.5  0.064000  0.085500  0.850000  0.001450
-    2020-01-04    8.5    9.5  0.028500  0.083500  0.887500  0.972650
-    2020-01-06   11.0   12.0  0.072667  0.147333  0.779333  0.902700
-    '''
-    
     @staticmethod
-    def draw_graph(df):
+    def draw_graph(ticker):
 
-        # dates = df.reset_index()['date']
-        # df.plot(dates, df.reset_index()['pos'], color = 'red', kind="bar")
-        # plt.title("News Sentiment for Apple")
-        # plt.xlabel("Date")
-        # plt.ylabel("Sentiment")
+        tickers = {'AAPL':'Apple Inc.', 'TSLA':'Tesla Inc.' }
+        if ticker == 'AAPL':
+            result = json.dumps(AppleSentiment.get()[0], default = lambda x: x.__dict__)
+        else:                
+            result = json.dumps(TeslaSentiment.get()[0], default = lambda x: x.__dict__)
 
-        # plt.show()
-       
+        df = pd.read_json(result)
+        df =df.drop(['id'], axis=1)
+        title = tickers[ticker]+" news sentiment for the first half of 2020"
+        ax=df.plot(x='date', y='compound', figsize=(20,10))
+        ax.set(xlabel="Date", ylabel="Overall scores", title=title)
+        ax.hlines(y=0, xmin='2020-01-01', xmax='2020-07-01', colors='r', linestyles='--', lw=2)
 
-
-        ax=df.reset_index()["pos"].plot.bar(color='red')
-        # ax1=df.reset_index()["neg"].plot.bar(x=ax, color='blue')
-
-        ax.set_xticks(df.reset_index()[0::15])
-        # ax1.set_xticklabels(df.reset_index()[0::15], rotation=45)
-
-        # ax1.set_ylabel("sentiment score")
-        # ax1.legend()
-
+        path = os.path.abspath(__file__+"/.."+"/plots/")
+        file_name = ticker + "_news_sentiment_anaylsis.png"
+        output_file = os.path.join(path, file_name)
+        plt.savefig(output_file)
+        
         plt.show()
 
-# if __name__=='__main__':
-#     apple = InvestingGraph()
+if __name__=='__main__':
+    apple = InvestingGraph()
+    tickers = ['AAPL', 'TSLA']
+    for t in tickers:
+        apple.draw_graph(t)
 #     result = apple.apple_dataframe()
 #     apple.draw_graph(result)
 

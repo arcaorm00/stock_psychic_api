@@ -1,12 +1,13 @@
 from flask_restful import Resource, reqparse
-from com_stock_api.ext.db import db, openSession
+from com_stock_api.ext.db import db, openSession, engine
 from sqlalchemy.orm import Session, sessionmaker, joinedload
 from sqlalchemy import create_engine
 import pandas as pd
 import os
 from sqlalchemy import and_,or_,func
 import json
-
+from flask import jsonify
+import numpy as np
 
 # =============================================================
 # =============================================================
@@ -77,6 +78,9 @@ class USCovidDto(db.Model):
         self.ca_cases = ca_cases
         self.ca_deaths = ca_deaths
 
+    # def __json__(self):
+    #     return ['date', 'total_cases', 'total_deaths', 'ca_cases', 'ca_deaths']
+
     def __repr__(self):
         return f'USCovid(id=\'{self.id}\', date=\'{self.date}\', total_cases=\'{self.total_cases}\',\
             total_deaths=\'{self.total_deaths}\',ca_cases=\'{self.ca_cases}\', \
@@ -89,9 +93,9 @@ class USCovidDto(db.Model):
             'id' : self.id,
             'date' : self.date,
             'total_cases' : self.total_cases,
-            'total_deaths' : self.total_death,
+            'total_deaths' : self.total_deaths,
             'ca_cases' : self.ca_cases,
-            'ca_deaths' : self.ca_death,
+            'ca_deaths' : self.ca_deaths,
         }
 
 class USCovidVo:
@@ -134,13 +138,14 @@ class USCovidDao(USCovidDto):
         session.close()
     @classmethod
     def find_by_date(cls, date):
-        return session.query(USCovidDto).filter(USCovidDto.date.like(date)).all()
+        return session.query(USCovidDto).filter(USCovidDto.date.like(date))
     @classmethod
     def find_by_period(cls,start_date, end_date):
-        return session.query(USCovidDto).filter(date__range=(start_date, end_date)).all()
+        return session.query(USCovidDto).filter(USCovidDto.date >=start_date).filter(USCovidDto.date <= end_date)
     @classmethod
     def find_all(cls):
-        sql = cls.query
+        print("class: ",cls)
+        sql = cls.query.all()
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 
@@ -201,11 +206,11 @@ class USCovid(Resource):
 class USNewCases(Resource):
     @staticmethod
     def get():
-        print("====uscovid.py / TotalCases's get ")
+        print("====uscovid.py / USNewsCases's get ")
         query = USCovidDao.find_only_us()
         df = pd.read_sql_query(query.statement, query.session.bind)
-        df['new_cases'] = df.total_cases.diff().fillna(0)
-        df['new_death'] = df.total_deaths.diff().fillna(0)
+        df['new_us_cases'] = df.total_cases.diff().fillna(0)
+        df['new_us_death'] = df.total_deaths.diff().fillna(0)
         df =df.astype(int)
         data = json.loads(df.to_json(orient="records"))
         return data, 200
@@ -215,18 +220,33 @@ class USNewCases(Resource):
 class CANewCases(Resource):
     @staticmethod
     def get():
-        print("====uscovid.py / TotalCases's get ")
+        print("====uscovid.py / CANewCases's get ")
         query = USCovidDao.find_only_ca()
         df = pd.read_sql_query(query.statement, query.session.bind)
-        df['new_cases'] = df.ca_cases.diff().fillna(0)
-        df['new_death'] = df.ca_deaths.diff().fillna(0)
+        df['new_ca_cases'] = df.ca_cases.diff().fillna(0)
+        df['new_ca_death'] = df.ca_deaths.diff().fillna(0)
         df =df.astype(int)
         data = json.loads(df.to_json(orient="records"))
         return data, 200
 
 class USCovids(Resource):
+    @staticmethod
     def get():
-        return USCovidDao.find_all(), 200
+        print("====uscovid.py / UScovids' get")
+        query = USCovidDao.find_by_period("2020-01-01", "2020-06-30")
+        print('==2==')
+        df = pd.read_sql_query(query.statement, query.session.bind, parse_dates=['date'])
+        df['new_us_cases'] = df.total_cases.diff().fillna(0).astype(np.int64)
+        df['new_us_deaths'] = df.total_deaths.diff().fillna(0).astype(np.int64)
+        df['new_ca_cases'] = df.ca_cases.diff().fillna(0).astype(np.int64)
+        df['new_ca_deaths'] = df.ca_deaths.diff().fillna(0).astype(np.int64)
+        data = json.loads(df.to_json(orient="records"))
+        return data,200
+
+
 
 if __name__ == "__main__":
-    CANewCases.get()
+    us = USCovids()
+    a =us.get()
+
+

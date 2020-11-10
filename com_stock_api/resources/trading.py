@@ -459,7 +459,7 @@ class TradingVo:
     stock_ticker: int = 0
     stock_qty: int = 0
     price: float = 0.0
-    trading_date: str = db.Column(db.String(1000), default=datetime.datetime.now())
+    trading_date: datetime = datetime.datetime.now()
 
 
 
@@ -531,7 +531,7 @@ class TradingDao(TradingDto):
         Session = openSession()
         session = Session()
         trading = session.query(TradingDto)\
-        .filter(TradingDto.id==trading.id)\
+        .filter(TradingDto.id==trading['id'])\
         .update({TradingDto.stock_qty: trading['stock_qty'], TradingDto.price: trading['price'], TradingDto.trading_date: trading['trading_date']})
         session.commit()
         session.close()
@@ -589,8 +589,8 @@ class Trading(Resource):
             return {'message': 'Trading not found'}, 404
 
     @staticmethod
-    def put(id):
-        args = parser.parse_args()
+    def put():
+        args = request.get_json()
         print(f'Trading {args} updated')
         try:
             TradingDao.modify_trading(args)
