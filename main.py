@@ -7,7 +7,6 @@ from com_stock_api.resources.member import MemberDao
 from com_stock_api.resources.board import BoardDao
 from com_stock_api.resources.comment import CommentDao
 from com_stock_api.resources.trading import TradingDao
-from com_stock_api.resources.recommend_stock import RecommendStockDao
 
 from com_stock_api.resources.nasdaq_prediction import NasdaqPredictionDao
 from com_stock_api.resources.uscovid import USCovidDao
@@ -24,7 +23,7 @@ from com_stock_api.resources.kospi_pred import KospiDao
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r'/api/*': {"origins": "*"}})
+CORS(app, resources={r'/*': {"origins": "*"}})
 
 # app.register_blueprint(member)
 # app.register_blueprint(board)
@@ -54,6 +53,8 @@ with app.app_context():
 
 
 with app.app_context():
+    db.create_all()
+
     count1 = USCovidDao.count()
     print(f'US Covid case Total Count is {count1[0]}')
     if count1[0] == 0:
@@ -81,6 +82,9 @@ with app.app_context():
 
 
 
+with app.app_context():
+    db.create_all()
+    #print(f'db created ... ')
 with app.app_context():
     news_count = NewsDao.count()
     print(f'****** News Total Count is {news_count} *******')
