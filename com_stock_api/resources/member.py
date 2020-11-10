@@ -235,6 +235,7 @@ class MemberModelingDataPreprocessing:
             this.train = pd.DataFrame([_data])
             self.isNewMember = True 
             members_data = pd.read_sql_table('members', engine.connect())
+            engine.connect().close()
             this.train = pd.concat([members_data, this.train], ignore_index=True)
 
         # isAdmin = this.train['email'] == 'admin@stockpsychic.com'

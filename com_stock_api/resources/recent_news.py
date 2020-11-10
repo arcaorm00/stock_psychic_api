@@ -239,26 +239,26 @@ class RecentNewsDao(RecentNewsDto):
     @staticmethod   
     def bulk():
         #1. When you want to refresh data
-        service = RecentNewsPro()
-        dfs = service.hook()
-        for i in dfs:
-            print(i.head())
-            session.bulk_insert_mappings(RecentNewsDto, i.to_dict(orient="records"))
-            session.commit()
-        session.close()
-
-        #2. When you already saved the most recent data
-        # tickers = ['AAPL', 'TSLA']
-        # for tic in tickers:
-        #     path = os.path.abspath(__file__+"/.."+"/saved_data/")
-        #     file_name = tic + '_recent_news.csv'
-        #     input_file = os.path.join(path,file_name)
-
-        #     df = pd.read_csv(input_file)
-        #     print(df.head())
-        #     session.bulk_insert_mappings(RecentNewsDto, df.to_dict(orient="records"))
+        # service = RecentNewsPro()
+        # dfs = service.hook()
+        # for i in dfs:
+        #     print(i.head())
+        #     session.bulk_insert_mappings(RecentNewsDto, i.to_dict(orient="records"))
         #     session.commit()
         # session.close()
+
+        #2. When you already saved the most recent data
+        tickers = ['AAPL', 'TSLA']
+        for tic in tickers:
+            path = os.path.abspath(__file__+"/.."+"/saved_data/")
+            file_name = tic + '_recent_news.csv'
+            input_file = os.path.join(path,file_name)
+
+            df = pd.read_csv(input_file)
+            print(df.head())
+            session.bulk_insert_mappings(RecentNewsDto, df.to_dict(orient="records"))
+            session.commit()
+        session.close()
 
     @staticmethod
     def save(news):
