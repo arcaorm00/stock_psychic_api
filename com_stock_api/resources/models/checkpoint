@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/minsoljeong/Stock_Psychic/com_stock_api/resources/models/TSLA10.ckpt"
+all_model_checkpoint_paths: "/Users/minsoljeong/Stock_Psychic/com_stock_api/resources/models/TSLA10.ckpt"

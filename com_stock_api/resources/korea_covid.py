@@ -4,7 +4,7 @@ from flask import request
 from flask_restful import Resource, reqparse
 from com_stock_api.ext.db import db, openSession
 from com_stock_api.utils.file_helper import FileReader
-from sqlalchemy import func, desc
+from sqlalchemy import func
 from pathlib import Path
 from flask import jsonify
 import pandas as pd
@@ -72,9 +72,9 @@ class KoreaDto(db.Model):
     def __init__(self, id,date, seoul_cases, seoul_deaths, total_cases, total_deaths):
         self.date = date
         self.seoul_cases = seoul_cases
-        self.seoul_death = seoul_death
+        self.seoul_deaths = seoul_deaths
         self.total_cases = total_cases
-        self.total_death = total_death
+        self.total_deaths = total_deaths
     
     def __repr__(self):
         return f'id={self.id},date={self.date}, seoul_cases={self.seoul_cases},\
@@ -139,7 +139,7 @@ class KoreaDao(KoreaDto):
 
     @classmethod
     def find_all(cls):
-        sql = cls.query.order_by(cls.date.desc())
+        sql = cls.query
         df = pd.read_sql(sql.statement, sql.session.bind)
         return json.loads(df.to_json(orient='records'))
 

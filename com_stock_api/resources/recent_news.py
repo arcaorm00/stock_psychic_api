@@ -365,7 +365,6 @@ class AppleNews(Resource):
 
         except:
             return {'message': 'An error occured inserting recent news'}, 500
-        return recent_news.json(), 201
           
     @staticmethod
     def get():
@@ -374,6 +373,7 @@ class AppleNews(Resource):
         stock.ticker = 'AAPL'
         data = RecentNewsDao.find_all_by_ticker(stock)
         return data, 200
+        
     @staticmethod
     def put(id):
         data = RecentNews.parser.parse_args()
