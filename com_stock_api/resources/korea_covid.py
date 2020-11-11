@@ -232,7 +232,7 @@ class KOCases(Resource):
     @staticmethod
     def get():
         query = KoreaDao.find_only_ko()
-        df = pd.reae_sql_query(query.statment, query.session.bind)
+        df = pd.read_sql_query(query.statment, query.session.bind)
         df['ko_cases'] = df.total_cases.diff().fillna(0)
         df['ko_deaths'] = df.total_deaths.diff().fillna(0)
         df = df.astype(int)
@@ -264,6 +264,6 @@ class KoreaCovids(Resource):
 
 
 
-if __name__ == "__main__":
-    ko = KoreaCovids()
-    ko.get()
+# if __name__ == "__main__":
+#     ko = KoreaCovids()
+#     ko.get()

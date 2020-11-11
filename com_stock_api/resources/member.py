@@ -601,6 +601,7 @@ class MemberDao(MemberDto):
 
         db.session.add(member)
         db.session.commit()
+        db.session.close()
 
     @staticmethod
     def insert_many():

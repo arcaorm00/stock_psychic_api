@@ -163,8 +163,8 @@ class RecommendStockPreprocessing():
 
     def hook_process(self, members):
 
-        isAdmin = members['email'] == 'admin@stockpsychic.com'
-        members = members[~isAdmin]
+        # isAdmin = members['email'] == 'admin@stockpsychic.com'
+        # members = members[~isAdmin]
         
         # 컬럼 삭제
         members = self.drop_feature(members, 'password')
@@ -513,7 +513,7 @@ class TradingDao(TradingDto):
     def save(trading):
         db.session.add(trading)
         db.session.commit()
-        session.close()
+        db.session.close()
 
     @staticmethod
     def insert_many():

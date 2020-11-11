@@ -195,7 +195,7 @@ class BoardDao(BoardDto):
     def save(board):
         db.session.add(board)
         db.session.commit()
-        db.close()
+        db.session.close()
 
     @staticmethod
     def insert_many():
@@ -265,7 +265,7 @@ class Board(Resource):
         print(f'body: {body}')
         board = BoardDto(**body)
         BoardDao.save(board)
-        return {'board': str(board.id)}, 200
+        return {'message': 'SUCCESS'}, 200
     
     @staticmethod
     def get(id):

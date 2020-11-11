@@ -132,6 +132,7 @@ class CommentDao(CommentDto):
     def save(comment):
         db.session.add(comment)
         db.session.commit()
+        db.session.close()
 
     @staticmethod
     def modify_comment(comment):
