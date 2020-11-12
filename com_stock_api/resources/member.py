@@ -235,7 +235,6 @@ class MemberModelingDataPreprocessing:
             this.train = pd.DataFrame([_data])
             self.isNewMember = True 
             members_data = pd.read_sql_table('members', engine.connect())
-            engine.connect().close()
             this.train = pd.concat([members_data, this.train], ignore_index=True)
 
         # isAdmin = this.train['email'] == 'admin@stockpsychic.com'
@@ -954,8 +953,8 @@ class Auth(Resource):
             return {'message': 'already exist'}, 500
 
         MemberDao.save(member)
-        email = member.email
-        return {'email': str(email)}, 200
+        # email = member.email
+        return  200
     
 class Access(Resource):
 

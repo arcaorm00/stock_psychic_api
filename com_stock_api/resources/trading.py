@@ -335,9 +335,9 @@ class RecommendStockModel():
             saver.save(sess, checkpoint_path, global_step=1000)
 
 
-# if __name__ == '__main__':
-#     rsmodel = RecommendStockModel()
-#     rsmodel.hook()
+if __name__ == '__main__':
+    rsmodel = RecommendStockModel()
+    rsmodel.hook()
 
 
 # 위의 checkpoint 저장이 너무 느려 아래 방식으로 수정
@@ -346,10 +346,11 @@ from scipy.spatial.distance import pdist, squareform
 class RecommendStocksWithSimilarity():
 
     def hook_process(self, email):
-        similarity = self.similarity(email)
-        sim_members = self.sortFifty(similarity)
-        match_tradings = self.similarMembersTradings(sim_members, email)
-        return pd.DataFrame(match_tradings)
+        if email != None:
+            similarity = self.similarity(email)
+            sim_members = self.sortFifty(similarity)
+            match_tradings = self.similarMembersTradings(sim_members, email)
+            return pd.DataFrame(match_tradings)
 
     @staticmethod
     def similarity(email):
