@@ -577,7 +577,7 @@ class Trading(Resource):
         print(f'body: {body}')
         trading = TradingDto(**body)
         TradingDao.save(trading)
-        return {'trading': str(trading.id)}, 200
+        return {'message': 'OK'}, 200
     
     @staticmethod
     def get(id):
