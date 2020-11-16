@@ -373,7 +373,7 @@ class RecommendStocksWithSimilarity():
         base_index = refined_members.index
         base_columns = refined_members.columns
 
-        row_dist = pd.DataFrame(squareform(pdist(refined_members, metric='cosine')), columns=base_index, index=base_index)
+        row_dist = pd.DataFrame(squareform(pdist(refined_members, metric='euclidean')), columns=base_index, index=base_index)
         print(row_dist)
 
         this_mem = row_dist[row_dist.index == email]
